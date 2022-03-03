@@ -1,3 +1,0 @@
->inicializar repo git (raiz nessa pasta)
->criar repo no github
->push p/ github
