@@ -1,0 +1,14 @@
+>inicializar cmake
+	>src: 	. (sources)
+	>build: ../build
+>criar estrutura do projeto (hierarquia)
+
+	sources (CMake root)
+	|
+	+---Projeto (target: executable)
+	    |
+		+---src
+		|   <arquivos .cpp>
+		|
+		+---include
+		    <arquivos .h>
