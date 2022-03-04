@@ -1,5 +1,0 @@
->adicionar target executável ao cmake: Projeto
->migrar código fonte do vsial studio p/ vscode
->linkar com as bibliotecas
-	>OpenCV (build and link)
-	>
