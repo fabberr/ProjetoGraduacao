@@ -37,7 +37,7 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/libs/OpenCV/")
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/libs/PBA/")
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/libs/VTK/")
 
-# Linking libraries
+# Linking libraries (library target names https://cmake.org/cmake/help/latest/command/target_link_libraries.html?highlight=imported#overview)
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC OpenCV 
 	PUBLIC PBA 
