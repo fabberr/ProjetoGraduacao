@@ -14,8 +14,8 @@
 // #include <pcl/features/normal_3d.h>
 
 // headers internos
-#include <include/Camera.h>
-#include <include/ParallelBundleAdjustment.h>
+#include <Camera.h>
+#include <ParallelBundleAdjustment.h>
 
 namespace fs = std::filesystem; // std::filesystem namespace alias
 

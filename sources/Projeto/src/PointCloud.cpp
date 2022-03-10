@@ -1,4 +1,4 @@
-#include <include/PointCloud.h>
+#include <PointCloud.h>
 
 // Construtor
 PointCloud::PointCloud(const fs::path& datasetDir, int imgCount)

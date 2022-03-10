@@ -19,10 +19,10 @@
 // #include <pcl/filters/radius_outlier_removal.h>
 
 // internal
-#include <include/Graph.h>
-#include <include/Track.h>
-#include <include/Camera.h>
-#include <include/Seed.h>
+#include <Graph.h>
+#include <Track.h>
+#include <Camera.h>
+#include <Seed.h>
 
 /*
 * Wrapper para m�todos da biblioteca Multi-Core Bundle Adjustment (ou ParallelBA)

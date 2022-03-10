@@ -1,4 +1,4 @@
-#include <include/Graph.h>
+#include <Graph.h>
 
 // Construtor default
 Graph::Graph() {}

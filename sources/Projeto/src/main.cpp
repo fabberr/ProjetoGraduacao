@@ -7,8 +7,8 @@
 #include <cstdlib>		// strtol
 
 // internal
-#include <include/PointCloud.h>
-// #include <include/SurfaceReconstruction.h>
+#include <PointCloud.h>
+// #include <SurfaceReconstruction.h>
 
 namespace fs = std::filesystem; // filesystem namespace alias
 
@@ -62,10 +62,7 @@ void printHelp() {
 void parse(int argc, char* const* argv) {
 
 	// verificando m�nimo de argumentos ou chamado de ajuda
-	if (argc < 2 ||
-		std::strncmp(argv[1], "--help", 6) == 0 ||
-		std::strncmp(argv[1], "-h", 2) == 0) {
-
+	if (argc < 2 || !std::strncmp(argv[1] + 1, "-h", 2)) {
 		printHelp();
 	}
 
@@ -104,7 +101,6 @@ void parse(int argc, char* const* argv) {
 	}
 }
 
-// main entry point
 int main(int argc, char** argv) {
 
 	// analisa os argumentos da linha de comando
@@ -114,7 +110,8 @@ int main(int argc, char** argv) {
 		// instanciando objeto PointCloud e computando nuvem de pontos
 		PointCloud cloud(path, n);
 		cloudPath = fs::path(
-			(computeDense) ? cloud.computeDense() : cloud.computeSparse()
+			// (computeDense) ? cloud.computeDense() : cloud.computeSparse()
+			cloud.computeSparse()
 		);
 	}
 

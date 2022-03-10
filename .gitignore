@@ -1,3 +1,17 @@
 # directories
 .vscode
 build
+output/**
+
+# dependency dirs
+sources/Projeto/libs/OpenCV/lib/**
+sources/Projeto/libs/OpenCV/bin/**
+sources/Projeto/libs/OpenCV/include/**
+
+sources/Projeto/libs/pba/lib/**
+sources/Projeto/libs/pba/bin/**
+sources/Projeto/libs/pba/include/**
+
+sources/Projeto/libs/vtk/lib/**
+sources/Projeto/libs/vtk/bin/**
+sources/Projeto/libs/vtk/include/**

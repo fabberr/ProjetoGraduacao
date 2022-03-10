@@ -1,4 +1,4 @@
-#include <include/StereoPair.h>
+#include <StereoPair.h>
 
 // Construtor default
 StereoPair::StereoPair() {

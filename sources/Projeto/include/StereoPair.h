@@ -17,9 +17,9 @@
 // #include <pcl/filters/radius_outlier_removal.h>
 
 // internal
-#include <include/Camera.h>
-#include <include/Track.h>
-#include <include/Seed.h>
+#include <Camera.h>
+#include <Track.h>
+#include <Seed.h>
 
 /*
 * StereoPair: representa um par de c�meras

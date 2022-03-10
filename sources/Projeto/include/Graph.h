@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <vector>
 
-#include <include/StereoPair.h>
+#include <StereoPair.h>
 
 namespace fs = std::filesystem;
 

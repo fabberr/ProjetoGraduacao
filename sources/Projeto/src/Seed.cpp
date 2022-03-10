@@ -1,4 +1,4 @@
-#include <include/Seed.h>
+#include <Seed.h>
 
 Seed::Seed() {
 	this->m_p1 = cv::Point2f(-1, -1);

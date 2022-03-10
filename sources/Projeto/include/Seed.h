@@ -5,8 +5,8 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 
-#include <include/Camera.h>
-#include <include/Keypoint.h>
+#include <Camera.h>
+#include <Keypoint.h>
 
 class Seed {
 private:

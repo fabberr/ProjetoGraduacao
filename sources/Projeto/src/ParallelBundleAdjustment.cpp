@@ -1,4 +1,4 @@
-#include <include/ParallelBundleAdjustment.h>
+#include <ParallelBundleAdjustment.h>
 
 // Construtor default
 ParallelBundleAdjustment::ParallelBundleAdjustment() {
