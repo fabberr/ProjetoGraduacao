@@ -25,17 +25,17 @@ set_target_properties(
 # Setting target's include dirs
 target_include_directories(
 	${PROJECT_NAME} PUBLIC
-	"${CMAKE_CURRENT_LIST_DIR}/libs/OpenCV/include/" 	# OpenCV 4.5.5
-	"${CMAKE_CURRENT_LIST_DIR}/libs/VTK/include/" 		# VTK 9.0.1
-	"${CMAKE_CURRENT_LIST_DIR}/libs/PBA/include/" 		# PBA 1.0.5
-	"${CMAKE_CURRENT_LIST_DIR}/include/"				# internal header files
+	"${CMAKE_CURRENT_LIST_DIR}/dependencies/OpenCV/include/" 	# OpenCV 4.5.5
+	"${CMAKE_CURRENT_LIST_DIR}/dependencies/VTK/include/" 		# VTK 9.0.1
+	"${CMAKE_CURRENT_LIST_DIR}/dependencies/PBA/include/" 		# PBA 1.0.5
+	"${CMAKE_CURRENT_LIST_DIR}/include/"						# internal header files
 )
 
 # Adding dependencies, each directory adds one or more imported shared library 
 # targets to be passed to `target_link_libraries()` call
-add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/libs/OpenCV/")
-add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/libs/PBA/")
-add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/libs/VTK/")
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/dependencies/OpenCV/")
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/dependencies/PBA/")
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/dependencies/VTK/")
 
 # Linking libraries with "Library Target Names" signature specified in: 
 # <https://cmake.org/cmake/help/latest/command/target_link_libraries.html#overview>
