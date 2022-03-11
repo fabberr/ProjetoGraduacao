@@ -41,6 +41,10 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/dependencies/VTK/")
 # <https://cmake.org/cmake/help/latest/command/target_link_libraries.html#overview>
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC opencv_core 
+	PUBLIC opencv_imgcodecs 
+	PUBLIC opencv_features2d 
+	PUBLIC opencv_calib3d 
+	PUBLIC opencv_imgproc 
 	PUBLIC pba 
 	PUBLIC vtkCommonCore 
 	PUBLIC vtkCommonMath 
