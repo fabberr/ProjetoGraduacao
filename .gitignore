@@ -4,14 +4,14 @@ build
 output/**
 
 # dependency dirs
-sources/Projeto/libs/OpenCV/lib/**
-sources/Projeto/libs/OpenCV/bin/**
-sources/Projeto/libs/OpenCV/include/**
+sources/Projeto/dependencies/OpenCV/lib/**
+sources/Projeto/dependencies/OpenCV/bin/**
+sources/Projeto/dependencies/OpenCV/include/**
 
-sources/Projeto/libs/pba/lib/**
-sources/Projeto/libs/pba/bin/**
-sources/Projeto/libs/pba/include/**
+sources/Projeto/dependencies/pba/lib/**
+sources/Projeto/dependencies/pba/bin/**
+sources/Projeto/dependencies/pba/include/**
 
-sources/Projeto/libs/vtk/lib/**
-sources/Projeto/libs/vtk/bin/**
-sources/Projeto/libs/vtk/include/**
+sources/Projeto/dependencies/vtk/lib/**
+sources/Projeto/dependencies/vtk/bin/**
+sources/Projeto/dependencies/vtk/include/**
