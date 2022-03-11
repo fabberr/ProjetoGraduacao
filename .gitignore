@@ -1,17 +1,8 @@
 # directories
 .vscode
 build
-output/**
 
 # dependency dirs
-sources/Projeto/dependencies/OpenCV/lib/**
-sources/Projeto/dependencies/OpenCV/bin/**
-sources/Projeto/dependencies/OpenCV/include/**
-
-sources/Projeto/dependencies/pba/lib/**
-sources/Projeto/dependencies/pba/bin/**
-sources/Projeto/dependencies/pba/include/**
-
-sources/Projeto/dependencies/vtk/lib/**
-sources/Projeto/dependencies/vtk/bin/**
-sources/Projeto/dependencies/vtk/include/**
+/sources/Projeto/dependencies/**
+!/sources/Projeto/dependencies/**/
+!/sources/Projeto/dependencies/**/.gitkeep
