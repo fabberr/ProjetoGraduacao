@@ -1,4 +1,4 @@
 # 
 # This is a dummy file, not part of the git spec. Used to force git to track this directory.
-# This directory is intended for storing PBA's import library files on Windows platforms (*.lib, *.lib.a).
+# This directory is intended for storing PBA's import library files for Windows platforms (*.lib, *.dll.a).
 # 
