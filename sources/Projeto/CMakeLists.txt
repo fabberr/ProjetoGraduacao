@@ -26,7 +26,7 @@ set_target_properties(
 target_include_directories(
 	${PROJECT_NAME} PUBLIC
 	"${CMAKE_CURRENT_LIST_DIR}/dependencies/OpenCV/include/" 	# OpenCV 4.5.5
-	"${CMAKE_CURRENT_LIST_DIR}/dependencies/VTK/include/" 		# VTK 9.0.1
+	"${CMAKE_CURRENT_LIST_DIR}/dependencies/VTK/include/" 		# VTK 9.1.0
 	"${CMAKE_CURRENT_LIST_DIR}/dependencies/PBA/include/" 		# PBA 1.0.5
 	"${CMAKE_CURRENT_LIST_DIR}/include/"						# internal header files
 )
@@ -40,13 +40,11 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/dependencies/VTK/")
 # Linking libraries with "Library Target Names" signature specified in: 
 # <https://cmake.org/cmake/help/latest/command/target_link_libraries.html#overview>
 target_link_libraries(${PROJECT_NAME}
-	PUBLIC opencv_core 
-	PUBLIC opencv_imgcodecs 
-	PUBLIC opencv_features2d 
-	PUBLIC opencv_calib3d 
-	PUBLIC opencv_imgproc 
+	PUBLIC opencv 
 	PUBLIC pba 
 	PUBLIC vtkCommonCore 
 	PUBLIC vtkCommonMath 
-	PUBLIC vtkloguru
+	PUBLIC vtkkissfft 
+	PUBLIC vtkloguru 
+	PUBLIC vtksys
 )

@@ -2,9 +2,9 @@
 #define MATHUTILS_H
 
 #include <opencv2/opencv.hpp>
-#include <vtk-9.0/vtkMath.h>
-#include <vtk-9.0/vtkSmartPointer.h>
-#include <vtk-9.0/vtkMatrix4x4.h>
+#include <vtk-9.1/vtkMath.h>
+#include <vtk-9.1/vtkSmartPointer.h>
+#include <vtk-9.1/vtkMatrix4x4.h>
 
 class MathUtils
 {
