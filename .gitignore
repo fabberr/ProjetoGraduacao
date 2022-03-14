@@ -1,6 +1,7 @@
 # directories
 .vscode
 build
+output
 
 # dependency dirs
 /sources/Projeto/dependencies/**
