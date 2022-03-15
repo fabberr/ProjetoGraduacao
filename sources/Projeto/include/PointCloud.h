@@ -1,15 +1,23 @@
 #ifndef POINTCLOUD_H
 #define POINTCLOUD_H
 
-// STL
-#include <filesystem>
+/********** Headers **********/
+
+// libc++
 #include <iostream>
 #include <string>
 #include <vector>
+#include <filesystem>
 
-// headers de terceiros
+namespace fs = std::filesystem; // std::filesystem namespace alias
+
+// libc
+#include <cstddef> // std::size_t
+
+// OpenCV
 #include <opencv2/opencv.hpp>
 
+// PCL
 // #include <pcl/point_types.h>
 // #include <pcl/features/normal_3d.h>
 
@@ -17,26 +25,31 @@
 #include <Camera.h>
 #include <ParallelBundleAdjustment.h>
 
-namespace fs = std::filesystem; // std::filesystem namespace alias
+/********** PointCloud.h **********/
 
 /*
-* Implementa os algoritmos usados na gera��o da nuvem de pontos (esparsa ou densa)
+* Implementa os algoritmos usados na geração da nuvem de pontos (esparsa ou densa)
 */
 class PointCloud {
 private:
-	//----- Membros
-	fs::path	m_path;			// caminho at� o diret�rio do dataset (sparse) ou diret�rio do arquivo .sfm (dense)
-	size_t		m_imgCount;		// n�mero de imagens a serem usadas
+	/********** Membros Privados **********/
+	
+	fs::path 	m_inputPath; 	// caminho até o diretório do dataset (sparse) ou diretório do arquivo .sfm (dense)
+	fs::path 	m_outputPath; 	// caminho até po diretório de saída
+	size_t		m_imgCount;		// número de imagens a serem usadas
 
 public:
-	//----- Construtores e destrutor
-	PointCloud(const fs::path& path, int imgCount);
-	PointCloud(const fs::path& path);
-	PointCloud();
+	/********** Construtores e Destrutor **********/
+	
+	PointCloud(const fs::path& datasetPath, const fs::path& outputPath= "./output/", size_t imgCount = 0);
+
+	PointCloud() = delete; // construtor padrão desabilitado
 	~PointCloud();
 
-	//----- M�todos
-	const fs::path computeSparse();
+public:
+	/********** Métodos Públicos **********/
+	
+	void computeSparse();
 	// const fs::path computeDense();
 	// std::vector<Camera*> loadCameras();
 

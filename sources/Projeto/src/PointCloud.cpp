@@ -1,69 +1,75 @@
+/********** Headers **********/
+
+// libc
+#include <cstddef> // std::size_t
+
+// headers internos
 #include <PointCloud.h>
 
-// Construtor
-PointCloud::PointCloud(const fs::path& datasetDir, int imgCount)
-	: m_path(datasetDir), m_imgCount(imgCount) {}
+/********** Definição de Funções **********/
 
 // Construtor
-PointCloud::PointCloud(const fs::path& datasetDir)
-	: m_path(datasetDir), m_imgCount(0) {}
-
-// Construtor default
-PointCloud::PointCloud() : m_path(""), m_imgCount(0) {}
+PointCloud::PointCloud(const fs::path& datasetPath, const fs::path& outputPath, size_t imgCount) : 
+	m_inputPath{datasetPath}, 
+	m_outputPath{outputPath}, 
+	m_imgCount{imgCount}
+{}
 
 // Destrutor
 PointCloud::~PointCloud() {}
 
-// Computa a nuvem de pontos esparsa usando como entrada as imagens do dataset, retorna o caminho do diret�rio de sa�da
-const fs::path PointCloud::computeSparse() {
-	/*----- I. CARREGAR C�MERAS -----*/
+// Computa a nuvem de pontos esparsa usando como entrada as imagens do dataset, retorna o caminho do diretório de saída
+void PointCloud::computeSparse() {
+	/*----- I. CARREGAR CÂMERAS -----*/
 
-	// a. carregar todos os caminhos at� as imagens do dataset em imagePaths
-	std::vector<fs::path> imagePaths; // lista de caminhos absolutos at� as imagens do dataset
-	for (const fs::directory_entry& entry : fs::directory_iterator(this->m_path))
+	// a. carregar todos os caminhos até as imagens do dataset em imagePaths
+	std::vector<fs::path> imagePaths; // lista de caminhos absolutos até as imagens do dataset
+	for (const auto& entry : fs::directory_iterator(this->m_inputPath)) {
 		imagePaths.emplace_back(entry.path());
+	}
 
-	// num. m�ximo de imagens a serem carregadas
-	if (!this->m_imgCount) {
+	// num. máximo de imagens a serem carregadas
+	if (this->m_imgCount == 0) {
 		this->m_imgCount = imagePaths.size();
 	}
 
-	std::cout << "Dataset: \"" << this->m_path.string() << "\"\n";
-	std::cout << " Nmr. de imagens: " << this->m_imgCount << std::endl;
+	std::cout << "Dataset: \"" << this->m_inputPath.string() << "\"\n";
+	std::cout << " Nmr. de imagens: " << this->m_imgCount << "\n\n";
 
 	// b. instanciar as cameras
-	std::cout << "\nCarregando as cameras...";
+	std::cout << "Carregando as cameras...";
 
-	std::vector<Camera*> cameras; // lista de c�meras, uma por imagem
+	std::vector<Camera*> cameras; // lista de câmeras, uma por imagem
 	cameras.reserve(this->m_imgCount);
-	for (const fs::path& path : imagePaths)
+	for (const fs::path& path : imagePaths) {
 		cameras.emplace_back(new Camera(path.string()));
+	}
 	imagePaths.clear();
-	std::cout << "OK\n";
+	std::cout << "OK" << std::endl;
 
 	// c. detectar features, computar descritores
-	std::cout << "Detectando keypoints e computando seus descritores...\n";
+	std::cout << "Detectando keypoints e computando seus descritores...\n\n";
 	for (size_t i = 0; i < this->m_imgCount; i++) {
 		Camera* cam = cameras[i];
-		std::cout << "\n>Imagem " << i + 1 << " de " << this->m_imgCount << ": \"";
-		std::cout << cam->m_pathToImage << "\"\n";
+		std::printf(">Imagem %llu de %llu: \"%s\"\n", i + 1, this->m_imgCount, cam->m_pathToImage.c_str());
 		cam->detectAndCompute();
-		std::cout << " Nmr. de keypoints: " << cam->m_keypoints.size() << std::endl;
+		std::printf(" Nmr. de keypoints: %llu\n\n", cam->m_keypoints.size());
 	}
+	std::cout.flush();
 
-	/*----- II. MATCHING & C�LCULO DAS POSES -----*/
+	/*----- II. MATCHING & CÁLCULO DAS POSES -----*/
 
 	std::vector<StereoPair*> sequentialPairs;	// lista de pares subsequentes {(0, 1), (1, 2), (2, 3), ...}
-	std::vector<StereoPair*> unorderedPairs;	// lista de pares aleat�rios
+	std::vector<StereoPair*> unorderedPairs;	// lista de pares aleatórios
 
-	// reservando espa�o p/ os pares
+	// reservando espaço p/ os pares
 	sequentialPairs.reserve(this->m_imgCount);
 	unorderedPairs.reserve(this->m_imgCount);
 
 	std::cout << "\nMatching: comparando imagens e calculando as poses...\n";
 	std::cout << "Nmr. minimo de matches: 100\n";
-	for (size_t i = 0; i < this->m_imgCount - 1; i++) { // i = 0, ..., pen�ltimo elem.
-		// a. comparar imagem com a subsequente at� que n�mero de matches seja < 100
+	for (size_t i = 0; i < this->m_imgCount - 1; i++) { // i = 0, ..., penúltimo elem.
+		// a. comparar imagem com a subsequente até que número de matches seja < 100
 		size_t lastNumOfMatches = 100;
 		StereoPair* pair;
 		for (size_t j = i + 1; j < this->m_imgCount && lastNumOfMatches >= 100; j++) { // j = i + 1, ..., �ltimo elem.
@@ -77,7 +83,7 @@ const fs::path PointCloud::computeSparse() {
 
 			if (lastNumOfMatches >= 100) {
 				// par teve pelo menos 100 matches
-				// criar as tracks, calcular as poses se for par sequ�ncial e adicionar na lista correta de pares
+				// criar as tracks, calcular as poses se for par sequêncial e adicionar na lista correta de pares
 				pair->createTracks();
 				if (j == i + 1) {
 					// sequentialPairs
@@ -98,8 +104,8 @@ const fs::path PointCloud::computeSparse() {
 		}
 
 		lastNumOfMatches = 100;
-		// b. comparar imagem com as �ltimas at� que o n�mero de matches seja < 100
-		for (size_t j = this->m_imgCount - 1; j > i + 1 && lastNumOfMatches >= 100; j--) { // j = �ltimo elem., ..., i + 2
+		// b. comparar imagem com as últimas até que o número de matches seja < 100
+		for (size_t j = this->m_imgCount - 1; j > i + 1 && lastNumOfMatches >= 100; j--) { // j = último elem., ..., i + 2
 			std::cout << "\n>Par (" << i << ", " << j << ")\n";
 			std::cout << " Matching...";
 			pair = new StereoPair(cameras[i], cameras[j]);
@@ -110,7 +116,7 @@ const fs::path PointCloud::computeSparse() {
 
 			if (lastNumOfMatches >= 100) {
 				// par teve pelo menos 100 matches
-				// criar tracks e adicionar em unorderedPairs (pois (j == i + 1) nunca ser� verdade)
+				// criar tracks e adicionar em unorderedPairs (pois (j == i + 1) nunca será verdade)
 				pair->createTracks();
 				unorderedPairs.emplace_back(pair);
 			} else {
@@ -122,17 +128,18 @@ const fs::path PointCloud::computeSparse() {
 		}
 	}
 
-	/*----- GERA��O DA NUVEM DE PONTOS -----*/
+	/*----- GERAÇÃO	 DA NUVEM DE PONTOS -----*/
 	std::cout << "\nGeracao da nuvem de pontos (esparsa)\n";
 
 	// a. criar as cenas
-	std::vector<Graph*> graphs; // lista de cenas, uma por par inicialmente, ao final apenas uma cena ser� gerada a partir da fus�o das demais
+	std::vector<Graph*> graphs; // lista de cenas, uma por par inicialmente, ao final apenas uma cena será gerada a partir da fusão das demais
 	graphs.reserve(sequentialPairs.size());
 
-	// b. adicionando os pares sequenciais �s cenas
+	// b. adicionando os pares sequenciais as cenas
 	std::cout << "\nAdicionando pares sequenciais nas cenas\n";
-	for (StereoPair* pair : sequentialPairs)
+	for (StereoPair* pair : sequentialPairs) {
 		graphs.emplace_back(new Graph(pair));
+	}
 	std::cout << graphs.size() << " cenas geradas\n";
 
 	// c. triangular os pontos 3D para as tracks da cena 0
@@ -140,20 +147,22 @@ const fs::path PointCloud::computeSparse() {
 	graphs[0]->triangulate3DPoints();
 	std::cout << "OK\n";
 
-	// d. fazer fus�o das cenas e um bundle adjustment a cada itera��o at� que todas as cenas sejem fundidas
+	// d. fazer fusão das cenas e um bundle adjustment a cada iteração até que todas as cenas sejem fundidas
 	std::cout << "\nFazendo fusao das cenas...\n";
 	size_t modelSize = 0;
 	for (size_t i = 1; i < graphs.size(); i++) {
-		// e. fazendo a fus�o da cena (adiciona novas tracks na cena 0)
+		// e. fazendo a fusão da cena (adiciona novas tracks na cena 0)
 		std::cout << "\n>Fusao: cena " << i << " com a cena 0\n";
 		graphs[0]->mergeWith(graphs[i]);
 
-		// f. adicionando os pares sem ordem que ainda n�o foram fundidos (adicionar novas tracks na cena 0)
-		for (StereoPair* p : unorderedPairs)
-			if (!p->m_pairMerged)
+		// f. adicionando os pares sem ordem que ainda não foram fundidos (adicionar novas tracks na cena 0)
+		for (StereoPair* p : unorderedPairs) {
+			if (!p->m_pairMerged) {
 				graphs[0]->addPair(p);
+			}
+		}
 
-		// g. recalcular os pontos 3D agora que h� novas tracks na cena
+		// g. recalcular os pontos 3D agora que há novas tracks na cena
 		std::cout << " Recalculando pontos 3D da cena 0...";
 		graphs[0]->triangulate3DPoints();
 		std::cout << "OK\n";
@@ -166,7 +175,7 @@ const fs::path PointCloud::computeSparse() {
 			pba->runBundle(true);
 			modelSize = graphs[0]->getModelSize();
 		} else {
-			// aumento de menos de 5% na quantidade de pontos -> BA sobre a �ltima c�mera
+			// aumento de menos de 5% na quantidade de pontos -> BA sobre a última câmera
 			std::cout << " Fazendo bundle adjustment parcial...\n";
 			pba->runBundle(false);
 		}
@@ -187,28 +196,20 @@ const fs::path PointCloud::computeSparse() {
 	/*----- EXPORTAR ARQUIVOS -----*/
 	std::cout << "\nExportando resultados\n";
 
-	// diret�rio dos resultados
-	const fs::path outputDir = this->m_path.has_filename() 
-		? fs::path("./output/")/this->m_path.filename().string()
-		: fs::path("./output/");
-
-	// a. exportar resultado da calibra��o das c�meras
+	// a. exportar resultado da calibração das câmeras
 	std::cout << "\n Exportando resultados da calibracao das cameras (.sfm)\n";
-	graphs[0]->exportSFM(outputDir); // .sfm
+	graphs[0]->exportSFM(this->m_outputPath); // .sfm
 
 	// b. exportar nuvem esparsa
 	std::cout << "\n Exportando nuvem de pontos (.obj)\n";
-	pba.exportOBJ(outputDir); // .obj (somente lista de v�rtices)
+	pba.exportOBJ(this->m_outputPath); // .obj (somente lista de vértices)
 
-	// c. exportar arquivo N-View Match para visualiza��o da nuvem gerado no VisualSFM
+	// c. exportar arquivo N-View Match para visualização da nuvem gerado no VisualSFM
 	std::cout << "\n Exportando N-View Match (.nvm)\n";
-	pba.exportNVM(outputDir); // .nvm
+	pba.exportNVM(this->m_outputPath); // .nvm
 
-	// FIM, liberar mem�ria
+	// FIM, liberar memória
 	// ...
-
-	// retorna o caminho at� o diret�rio de sa�da
-	return outputDir;
 }
 
 // // Computa a nuvem de pontos densa usando como entrada o resultado da gera��o da nuvem esparsa, retorna o caminho do diret�rio de sa�da
@@ -225,7 +226,7 @@ const fs::path PointCloud::computeSparse() {
 // 	}
 
 // 	std::vector<StereoPair*> pairs;						// vetor de pares
-// 	const fs::path outputDir = this->m_path/"dense";	// diret�rio de sa�da
+// 	const fs::path outputDir = this->m_inputPath/"dense";	// diret�rio de sa�da
 
 // 	// comparar pares de c�mera
 // 	std::cout << "Comparando angulo entre as cameras:\n";
@@ -319,7 +320,7 @@ const fs::path PointCloud::computeSparse() {
 // // L� o arquivo .sfm e instancia um vetor de c�meras com as matrizes intrinseca e extrinseca carregadas do arquivo
 // std::vector<Camera*> PointCloud::loadCameras() {
 
-// 	std::string poseFilename = (this->m_path/"pose.sfm").string();	// caminho do arquivo
+// 	std::string poseFilename = (this->m_inputPath/"pose.sfm").string();	// caminho do arquivo
 // 	std::ifstream ifs(poseFilename);								// construtor input file stream, tenta abrir o arquivo
 // 	std::vector<Camera*> cameras;									// vetor de c�meras (sa�da do m�todo)
 
@@ -427,3 +428,5 @@ const fs::path PointCloud::computeSparse() {
 // 		std::cout << "  Erro ao abrir arquivo: " << filename << std::endl;
 // 	}
 // }
+
+/** @todo liberar memória alocada no heap ao destruir objeto */

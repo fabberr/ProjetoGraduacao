@@ -1,123 +1,126 @@
 /********** Headers **********/
 
-// STL
+// libc++
+#include <iostream>		// input/output streams
 #include <filesystem>	// filesystem library
-#include <iostream>		// cout
-#include <cstring>		// strncmp
-#include <cstdlib>		// strtol
+
+namespace fs = std::filesystem; // filesystem namespace alias
+
+// libc
+#include <cstdio> 	// fprintf
+#include <cstddef> 	// size_t
+#include <cstring> 	// strncmp
+#include <cstdlib>	// strtol, exit
 
 // internal
 #include <PointCloud.h>
 // #include <SurfaceReconstruction.h>
 
-namespace fs = std::filesystem; // filesystem namespace alias
 
-/********** Vari�veis globais de controle **********/
+/********** Variáveis de controle **********/
 
-fs::path path("./");		// obrigat�rio	<path>:				indica o caminho at� diret�rio das imagens (sparse) ou do arquivo .sfm (dense)
+namespace ctrl {
 
-long int n = 0;				// opcional		[--count <N>]:		indica o n�mero m�ximo de imagens que devem ser usadas (sparse)
+// input/output paths
+fs::path input_path{}; 				/* Caminho até diretório do dataset (sparse) ou do arquivo .sfm (dense). */
+fs::path output_path{"./output/"}; 	/* Caminho até o diretório de saída. */
 
-bool computeDense = false;	// opcional		[--dense]:			flag -- indica se deve computar a nuvem densa ao inv�s da esparsa
+// [--count]
+long int count{0}; /* Número máximo de imagens que devem ser usadas (sparse). */
 
-fs::path cloudPath("./");	// opcional		[--cloud <path>]:	indica o caminho at� o arquivo .obj (sparse) e pula a etapa de gera��o da nuvem de pontos
-bool skipCloud = false;		//									flag -- indica se deve pular a etapa de gera��o da nuvem de pontos
+// [--dense]
+bool compute_dense{false}; /* Flag -- indica se deve computar a nuvem densa ao invés da esparsa. */
 
-/********** Fun��es **********/
+} // namespace ctrl
 
-/* Exibe a mensagem de ajuda do programa e termina a execu��o. */
+/********** Funções **********/
+
+/* Exibe a mensagem de ajuda do programa. */
 void printHelp() {
 	std::cout << 
-		"Uso: ./ProjetoGrad <PATH> [OPTIONS]\n\n" 
-		"PATH:\n" 
+		"Uso: ./ProjetoGrad <input_path> [output_path] [OPTIONS]\n\n" 
+		"<input_path>:\n" 
 		"    Caminho do diretorio contendo o dataset usado para computar a nuvem de\n" 
 		"    pontos esparsa. Ao final da execucao, serao gerados tres arquivos:\n" 
-		"        -\"point_cloud.obj\": Arquivo no formato *.obj contendo apenas a lista de\n" 
+		"        -`point_cloud.obj`: Arquivo no formato *.obj contendo apenas a lista de\n" 
 		"         vertices do objeto.\n" 
-		"        -\"nview_match.nvm\": Arquivo no formato *.nvm contendo as cameras e suas\n" 
+		"        -`nview_match.nvm`: Arquivo no formato *.nvm contendo as cameras e suas\n" 
 		"         respectivas matrizes intrinsecas e extrinsecas e listas de vertices.\n" 
-		"         Usado para visualizacao da nuvem de pontos esparsa.\n" 
-		"        -\"pose.sfm\": Arquivo no formato *.sfm contendo informacoes sobre a pose\n" 
+		"        -`pose.sfm`: Arquivo no formato *.sfm contendo informacoes sobre a pose\n" 
 		"         estimada de cada camera (matrizes intrinseca e extrinseca e ponto\n" 
-		"         focal). Usado para computar a nuvem de pontos densa.\n" 
+		"         focal).\n" 
+		"[output_path]:\n" 
+		"    Opcional. Caminho ate o diretorio onde serao armazenados os resultados.\n" 
+		"    `./output/`, por padrao\n"
 		"OPTIONS:\n" 
-		"--help, -h:\n" 
-		"    Exibe esta mensagem de ajuda.\n" 
-		"--count <N>:\n" 
-		"    Especifica o total de imagens do dataset que serao usadas.\n" 
-		"--dense:\n" 
-		"    Computa a nuvem de pontos densa, usando o diretorio especificado em PATH\n" 
-		"    para localizar o arquivo necessario (pose.sfm).\n"
+		"    --help, -h:\n" 
+		"        Exibe esta mensagem de ajuda.\n" 
+		"    --count:\n" 
+		"        Especifica o total de imagens do dataset que serao usadas.\n" 
+		"    --dense:\n" 
+		"        Computa a nuvem de pontos densa, usando o diretorio especificado em input_path\n" 
+		"        para localizar o arquivo de calibracao das cameras (*.sfm).\n"
 	<< std::endl;
-
-	std::exit(0);
 }
 
-/*
-* Analisa os argumentos da linha de comando e modifica as vari�veis de controle.
-* 
-* @param argc -- N�mero de argumentos.
-* @param argv -- Vetor de C-strings contendo argc argumentos.
-*/
-void parse(int argc, char* const* argv) {
+/* Analisa os argumentos da linha de comando e modifica as variáveis de controle. */
+void parse(int argc, const char* const* argv) {
 
-	// verificando m�nimo de argumentos ou chamado de ajuda
-	if (argc < 2 || !std::strncmp(argv[1] + 1, "-h", 2)) {
-		printHelp();
+	// processando flags e argumentos de controle, se existirem
+	for (int arg_idx = 2; arg_idx < argc; ++arg_idx) {
+		const char* current_arg = argv[arg_idx];
+
+		if (std::strncmp(current_arg + 1, "-h", 2) == 0) { 			// --help, -h
+			printHelp();
+			std::exit(0);
+		} else if (std::strncmp(current_arg, "--count", 7) == 0) { 	// --count
+			// incremente arg_idx e verifica se o próximo argumento existe
+			if (++arg_idx < argc) {
+				// tenta converter em um valor inteiro na base10, se falhar, strol retorna 0
+				ctrl::count = std::strtol(current_arg, nullptr, 10);
+			}
+		} else if (std::strncmp(current_arg, "--dense", 7) == 0) { 	// --dense
+			// set flag compute_dense
+			ctrl::compute_dense = true;
+		}
 	}
 
-	// verificando e extra�ndo argumento obrigat�rio
-	path = fs::path(argv[1]);
-	if (!fs::is_directory(path)) {
-		std::cout << "ERRO: caminho especificado nao existe.\n";
+	// verificando número mínimo de argumentos
+	if (argc < 2) {
+		printHelp();
 		std::exit(-1);
 	}
 
-	// extrair argumentos opcionais, se existirem
-	for (int i = 2; i < argc; i++) {
-		if (argv[i] && !std::strncmp(argv[i], "--count", 7)) {
-			// --count <N>
+	// extraíndo e validando argumento obrigatório input_path
+	ctrl::input_path = argv[1];
+	if (!fs::exists(ctrl::input_path) || !fs::is_directory(ctrl::input_path)) {
+		std::cout << "[ERRO] Caminho de entrada especificado nao existe ou nao e valido\n";
+		std::exit(-1);
+	}
 
-			// incrementa i e extrai pr�ximo argumento, se existir
-			if (++i < argc) {
-				// tenta converter em um valor inteiro, sem retornar ponteiro para o �ltimo char ap�s o n�mero, na base10
-				// se falhar, retorna 0
-				n = std::strtol(argv[i], nullptr, 10);
-			}
-		} else if (argv[i] && !std::strncmp(argv[i], "--dense", 7)) {
-			// --dense
-			
-			// set computeDense flag
-			computeDense = true;
-		} else if (argv[i] && !std::strncmp(argv[i], "--cloud", 7)) {
-			// --cloud <path>
-
-			// incrementa i e extrai o pr�ximo argumento, se existir e set skipCloud flag
-			if (++i < argc) {
-				cloudPath = fs::path(argv[i]);
-				skipCloud = true;
-			}
+	// extraíndo e validando argumento obrigatório output_path, se existir
+	if (argc > 2) {
+		ctrl::output_path = argv[2];
+		if (!fs::is_directory(ctrl::output_path)) {
+			std::cout << 
+				"[AVISO] Caminho de saida especificado nao e valido\n" 
+				"    Usando caminho padrao `./output/`\n" 
+			<< std::endl;
+			ctrl::output_path = "./output/";
 		}
 	}
 }
 
+// main entry point
+// ../../../ = raiz do projeto a partir de build/Projeto/Debug/
+// ./Projeto "../../../datasets/gargoyle/" "../../../output/"
 int main(int argc, char** argv) {
 
 	// analisa os argumentos da linha de comando
 	parse(argc, argv);
 
-	if (!skipCloud) {
-		// instanciando objeto PointCloud e computando nuvem de pontos
-		PointCloud cloud(path, n);
-		cloudPath = fs::path(
-			// (computeDense) ? cloud.computeDense() : cloud.computeSparse()
-			cloud.computeSparse()
-		);
-	}
-
-	// // instanciando objeto SurfaceReconstruction com caminho at� arquivos exportados da �ltima etapa
-	// SurfaceReconstruction recon(cloudPath, computeDense);
-	// recon.computeMesh(computeDense);
+	// instanciando objeto PointCloud e computando nuvem de pontos
+	PointCloud{ctrl::input_path, ctrl::output_path, static_cast<std::size_t>(ctrl::count)}.computeSparse();
 
 	return 0;
 }
