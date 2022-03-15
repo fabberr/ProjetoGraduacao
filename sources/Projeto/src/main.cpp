@@ -98,16 +98,10 @@ void parse(int argc, const char* const* argv) {
 		std::exit(-1);
 	}
 
-	// extraíndo e validando argumento obrigatório output_path, se existir
+	// extraíndo argumento opcional output_path, se existir
 	if (argc > 2) {
+		// validação nas funções que exportam os resultados
 		ctrl::output_path = argv[2];
-		if (!fs::is_directory(ctrl::output_path)) {
-			std::cout << 
-				"[AVISO] Caminho de saida especificado nao e valido\n" 
-				"    Usando caminho padrao `./output/`\n" 
-			<< std::endl;
-			ctrl::output_path = "./output/";
-		}
 	}
 }
 

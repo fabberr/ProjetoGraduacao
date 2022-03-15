@@ -1,5 +1,8 @@
 /********** Headers **********/
 
+// libc++
+#include <string> // std::string
+
 // libc
 #include <cstddef> // std::size_t
 
@@ -13,13 +16,23 @@ PointCloud::PointCloud(const fs::path& datasetPath, const fs::path& outputPath, 
 	m_inputPath{datasetPath}, 
 	m_outputPath{outputPath}, 
 	m_imgCount{imgCount}
-{}
+{
+	std::string count = (m_imgCount) ? std::to_string(imgCount) : "desconhecido";
+	std::cout << 
+		"-- Instanciando objeto PointCloud:\n"
+		"     m_inputPath: " << m_inputPath << "\n"
+		"     m_outputPath: " << m_outputPath << "\n"
+		"     m_imgCount: " << count << "\n"
+	<< std::endl;
+}
 
 // Destrutor
 PointCloud::~PointCloud() {}
 
 // Computa a nuvem de pontos esparsa usando como entrada as imagens do dataset, retorna o caminho do diretório de saída
 void PointCloud::computeSparse() {
+	std::cout << "-- PointCloud::computeSparse()" << std::endl;
+
 	/*----- I. CARREGAR CÂMERAS -----*/
 
 	// a. carregar todos os caminhos até as imagens do dataset em imagePaths
