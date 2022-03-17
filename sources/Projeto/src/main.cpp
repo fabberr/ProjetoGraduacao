@@ -75,7 +75,7 @@ void parse(int argc, const char* const* argv) {
 			std::exit(0);
 		} else if (std::strncmp(current_arg, "--count", 7) == 0) { 	// --count
 			// incremente arg_idx e verifica se o próximo argumento existe
-			if (++arg_idx < argc) {
+			if (current_arg = argv[++arg_idx]; arg_idx < argc) {
 				// tenta converter em um valor inteiro na base10, se falhar, strol retorna 0
 				ctrl::count = std::strtol(current_arg, nullptr, 10);
 			}
@@ -106,15 +106,18 @@ void parse(int argc, const char* const* argv) {
 }
 
 // main entry point
-// ../../../ = raiz do projeto a partir de build/Projeto/Debug/
-// ./Projeto "../../../datasets/gargoyle/" "../../../output/"
+// ./Projeto "C:/code/cpp/ProjetoGraduacao/datasets/gargoyle" "C:/code/cpp/ProjetoGraduacao/output"
 int main(int argc, char** argv) {
 
 	// analisa os argumentos da linha de comando
 	parse(argc, argv);
 
-	// instanciando objeto PointCloud e computando nuvem de pontos
-	PointCloud{ctrl::input_path, ctrl::output_path, static_cast<std::size_t>(ctrl::count)}.computeSparse();
+	// instanciando objeto PointCloud sem nome e computando nuvem de pontos
+	PointCloud{ 
+		ctrl::input_path.make_preferred(), 		// std::filesystem::path
+		ctrl::output_path.make_preferred(), 	// std::filesystem::path
+		static_cast<std::size_t>(ctrl::count) 	// std::size_t
+	}.computeSparse();
 
 	return 0;
 }

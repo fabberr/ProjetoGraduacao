@@ -47,8 +47,8 @@ public:
 	//----- M�todos
 	void runBundle(bool fullBA);
 	Graph* getResult();
-	void exportNVM(const fs::path& outputDir = "./output/", const std::string& filename = "nview_match.nvm");
-	void exportOBJ(const fs::path& outputDir = "./output/", const std::string& filename = "cloud.obj");
+	void exportNVM(const fs::path& outputDir, const std::string& filename = "nview_match.nvm");
+	void exportOBJ(const fs::path& outputDir, const std::string& filename = "cloud.obj");
 };
 
 #endif // PARALLELBUNDLEADJUSTMENT_H

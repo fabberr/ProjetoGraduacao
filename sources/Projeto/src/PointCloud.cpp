@@ -17,12 +17,12 @@ PointCloud::PointCloud(const fs::path& datasetPath, const fs::path& outputPath, 
 	m_outputPath{outputPath}, 
 	m_imgCount{imgCount}
 {
-	std::string count = (m_imgCount) ? std::to_string(imgCount) : "desconhecido";
+	std::string count = (m_imgCount) ? std::to_string(imgCount) : "ALL";
 	std::cout << 
 		"-- Instanciando objeto PointCloud:\n"
-		"     m_inputPath: " << m_inputPath << "\n"
-		"     m_outputPath: " << m_outputPath << "\n"
-		"     m_imgCount: " << count << "\n"
+		"   m_inputPath: " << m_inputPath.string() << "\n"
+		"   m_outputPath: " << m_outputPath.string() << "\n"
+		"   m_imgCount: " << count << "\n"
 	<< std::endl;
 }
 
@@ -31,9 +31,10 @@ PointCloud::~PointCloud() {}
 
 // Computa a nuvem de pontos esparsa usando como entrada as imagens do dataset, retorna o caminho do diretório de saída
 void PointCloud::computeSparse() {
-	std::cout << "-- PointCloud::computeSparse()" << std::endl;
+	std::cout << "-- PointCloud::computeSparse()\n\n";
 
 	/*----- I. CARREGAR CÂMERAS -----*/
+	std::cout << "CARREGANDO CAMERAS\n\n";
 
 	// a. carregar todos os caminhos até as imagens do dataset em imagePaths
 	std::vector<fs::path> imagePaths; // lista de caminhos absolutos até as imagens do dataset
@@ -46,31 +47,29 @@ void PointCloud::computeSparse() {
 		this->m_imgCount = imagePaths.size();
 	}
 
-	std::cout << "Dataset: \"" << this->m_inputPath.string() << "\"\n";
-	std::cout << " Nmr. de imagens: " << this->m_imgCount << "\n\n";
+	std::cout << "-- Dataset: " << this->m_inputPath.string() << "\n";
+	std::cout << "   Nmr. de imagens: " << this->m_imgCount << "\n\n";
 
 	// b. instanciar as cameras
-	std::cout << "Carregando as cameras...";
-
 	std::vector<Camera*> cameras; // lista de câmeras, uma por imagem
 	cameras.reserve(this->m_imgCount);
 	for (const fs::path& path : imagePaths) {
 		cameras.emplace_back(new Camera(path.string()));
 	}
 	imagePaths.clear();
-	std::cout << "OK" << std::endl;
 
 	// c. detectar features, computar descritores
-	std::cout << "Detectando keypoints e computando seus descritores...\n\n";
+	std::cout << "-- Detectando keypoints e computando seus descritores\n\n";
 	for (size_t i = 0; i < this->m_imgCount; i++) {
 		Camera* cam = cameras[i];
-		std::printf(">Imagem %llu de %llu: \"%s\"\n", i + 1, this->m_imgCount, cam->m_pathToImage.c_str());
+		std::cout << "-- Imagem " << (i + 1) << " de " << this->m_imgCount << ": " << cam->m_pathToImage << '\n';
 		cam->detectAndCompute();
-		std::printf(" Nmr. de keypoints: %llu\n\n", cam->m_keypoints.size());
+		std::cout << "   Keypoints: " << cam->m_keypoints.size() << "\n\n";
 	}
-	std::cout.flush();
 
 	/*----- II. MATCHING & CÁLCULO DAS POSES -----*/
+	std::cout << "MATCHING E CALCULO DAS POSES\n";
+	std::cout << "   Nmr. minimo de matches: 100\n\n";
 
 	std::vector<StereoPair*> sequentialPairs;	// lista de pares subsequentes {(0, 1), (1, 2), (2, 3), ...}
 	std::vector<StereoPair*> unorderedPairs;	// lista de pares aleatórios
@@ -79,20 +78,17 @@ void PointCloud::computeSparse() {
 	sequentialPairs.reserve(this->m_imgCount);
 	unorderedPairs.reserve(this->m_imgCount);
 
-	std::cout << "\nMatching: comparando imagens e calculando as poses...\n";
-	std::cout << "Nmr. minimo de matches: 100\n";
 	for (size_t i = 0; i < this->m_imgCount - 1; i++) { // i = 0, ..., penúltimo elem.
 		// a. comparar imagem com a subsequente até que número de matches seja < 100
 		size_t lastNumOfMatches = 100;
 		StereoPair* pair;
-		for (size_t j = i + 1; j < this->m_imgCount && lastNumOfMatches >= 100; j++) { // j = i + 1, ..., �ltimo elem.
-			std::cout << "\n>Par (" << i << ", " << j << ")\n";
-			std::cout << " Matching...";
+		for (size_t j = i + 1; j < this->m_imgCount && lastNumOfMatches >= 100; j++) { // j = i + 1, ..., último elem.
+			std::cout << "-- Par (" << i << ", " << j << ")\n";
+			std::cout << "   Matching...";
 			pair = new StereoPair(cameras[i], cameras[j]);
 			lastNumOfMatches = pair->match();
-
-			std::cout << "OK" << std::endl;
-			std::cout << " Nmr. de matches: " << lastNumOfMatches << std::endl;
+			std::cout << "OK\n";
+			std::cout << "   Matches: " << lastNumOfMatches << '\n';
 
 			if (lastNumOfMatches >= 100) {
 				// par teve pelo menos 100 matches
@@ -100,7 +96,7 @@ void PointCloud::computeSparse() {
 				pair->createTracks();
 				if (j == i + 1) {
 					// sequentialPairs
-					std::cout << " Calculando pose...";
+					std::cout << "   Calculando pose...";
 					pair->recoverPose();
 					std::cout << "OK\n";
 					sequentialPairs.emplace_back(pair);
@@ -112,20 +108,20 @@ void PointCloud::computeSparse() {
 				// par teve menos que 100 matches
 				// descartar par
 				delete pair;
-				std::cout << " Par descartado\n";
+				std::cout << "   Par descartado\n";
 			}
+			std::cout << '\n';
 		}
 
 		lastNumOfMatches = 100;
 		// b. comparar imagem com as últimas até que o número de matches seja < 100
 		for (size_t j = this->m_imgCount - 1; j > i + 1 && lastNumOfMatches >= 100; j--) { // j = último elem., ..., i + 2
-			std::cout << "\n>Par (" << i << ", " << j << ")\n";
-			std::cout << " Matching...";
+			std::cout << "-- Par (" << i << ", " << j << ")\n";
+			std::cout << "   Matching...";
 			pair = new StereoPair(cameras[i], cameras[j]);
 			lastNumOfMatches = pair->match();
-
 			std::cout << "OK\n";
-			std::cout << " Nmr. de matches: " << lastNumOfMatches << std::endl;
+			std::cout << "   Matches: " << lastNumOfMatches << '\n';
 
 			if (lastNumOfMatches >= 100) {
 				// par teve pelo menos 100 matches
@@ -136,36 +132,38 @@ void PointCloud::computeSparse() {
 				// par teve menos que 100 matches
 				// descartar par
 				delete pair;
-				std::cout << " Par descartado\n";
+				std::cout << "   Par descartado\n";
 			}
+			std::cout << '\n';
 		}
 	}
 
 	/*----- GERAÇÃO	 DA NUVEM DE PONTOS -----*/
-	std::cout << "\nGeracao da nuvem de pontos (esparsa)\n";
+	std::cout << "GERACAO DA NUVEM DE PONTOS\n\n";
 
 	// a. criar as cenas
+	std::cout << "-- Criando cenas\n";
 	std::vector<Graph*> graphs; // lista de cenas, uma por par inicialmente, ao final apenas uma cena será gerada a partir da fusão das demais
 	graphs.reserve(sequentialPairs.size());
 
 	// b. adicionando os pares sequenciais as cenas
-	std::cout << "\nAdicionando pares sequenciais nas cenas\n";
+	std::cout << "   Adicionando pares sequenciais nas cenas\n";
 	for (StereoPair* pair : sequentialPairs) {
 		graphs.emplace_back(new Graph(pair));
 	}
-	std::cout << graphs.size() << " cenas geradas\n";
+	std::cout << "   " << graphs.size() << " cenas geradas\n\n";
 
 	// c. triangular os pontos 3D para as tracks da cena 0
-	std::cout << "Triangulando pontos iniciais da cena 0...";
+	std::cout << "-- Triangulando pontos iniciais da cena 0...";
 	graphs[0]->triangulate3DPoints();
-	std::cout << "OK\n";
+	std::cout << "OK\n\n";
 
 	// d. fazer fusão das cenas e um bundle adjustment a cada iteração até que todas as cenas sejem fundidas
-	std::cout << "\nFazendo fusao das cenas...\n";
+	std::cout << "-- Fazendo fusao das cenas...\n\n";
 	size_t modelSize = 0;
 	for (size_t i = 1; i < graphs.size(); i++) {
 		// e. fazendo a fusão da cena (adiciona novas tracks na cena 0)
-		std::cout << "\n>Fusao: cena " << i << " com a cena 0\n";
+		std::cout << "-- Fusao: cena " << i << " com a cena 0\n";
 		graphs[0]->mergeWith(graphs[i]);
 
 		// f. adicionando os pares sem ordem que ainda não foram fundidos (adicionar novas tracks na cena 0)
@@ -176,7 +174,7 @@ void PointCloud::computeSparse() {
 		}
 
 		// g. recalcular os pontos 3D agora que há novas tracks na cena
-		std::cout << " Recalculando pontos 3D da cena 0...";
+		std::cout << "   Recalculando pontos 3D da cena 0...";
 		graphs[0]->triangulate3DPoints();
 		std::cout << "OK\n";
 
@@ -184,44 +182,49 @@ void PointCloud::computeSparse() {
 		ParallelBundleAdjustment* pba = new ParallelBundleAdjustment(graphs[0]);
 		if (i == 1 || (graphs[0]->getModelSize() > modelSize * 1.05 && graphs[0]->m_cameras.size() > 5)) {
 			// aumento de mais de 5% na quantidade de pontos => BA completo
-			std::cout << " Fazendo bundle adjustment completo parcial...\n";
+			std::cout << "   Fazendo Bundle Adjustment completo sobre a cena 0...\n";
 			pba->runBundle(true);
 			modelSize = graphs[0]->getModelSize();
 		} else {
 			// aumento de menos de 5% na quantidade de pontos -> BA sobre a última câmera
-			std::cout << " Fazendo bundle adjustment parcial...\n";
+			std::cout << "   Fazendo Bundle Adjustment parcial sobre a cena 0...\n";
 			pba->runBundle(false);
 		}
 		graphs[0] = pba->getResult();
-		std::cout << "OK\n";
+		std::cout << "   Bundle Adjustment parcial OK\n\n";
 		delete pba;
 
 		//graphs[0]->filterPoints();
 	}
 
 	// i. bundle adjustment completo final
-	std::cout << "\nTodas as cenas foram fundidas, fazendo bundle adjustment completo final...\n";
+	std::cout << "-- Fusao completa, fazendo Bundle Adjustment completo sobre a cena 0...\n";
 	ParallelBundleAdjustment pba(graphs[0]);
 	pba.runBundle(true);
 	graphs[0] = pba.getResult();
-	std::cout << "OK\n";
+	std::cout << "   Bundle Adjustment final OK\n\n";
 
 	/*----- EXPORTAR ARQUIVOS -----*/
-	std::cout << "\nExportando resultados\n";
+	std::cout << "EXPORTANDO RESULTADOS\n\n";
+
+	// diretório de saída com o nome do dataset
+	fs::path dataset_name{this->m_inputPath.has_filename() ? this->m_inputPath.filename() : this->m_inputPath.parent_path().filename()};
+	fs::path outputDir{this->m_outputPath/dataset_name};
+	std::cout << "-- Exportando em: " << outputDir.string() << '\n';
 
 	// a. exportar resultado da calibração das câmeras
-	std::cout << "\n Exportando resultados da calibracao das cameras (.sfm)\n";
-	graphs[0]->exportSFM(this->m_outputPath); // .sfm
+	std::cout << "   Exportando poses das cameras (*.sfm)\n";
+	graphs[0]->exportSFM(outputDir); // .sfm
 
 	// b. exportar nuvem esparsa
-	std::cout << "\n Exportando nuvem de pontos (.obj)\n";
-	pba.exportOBJ(this->m_outputPath); // .obj (somente lista de vértices)
+	std::cout << "   Exportando nuvem de pontos esparsa (*.obj)\n";
+	graphs[0]->exportOBJ(outputDir); // .obj (somente lista de vértices)
 
 	// c. exportar arquivo N-View Match para visualização da nuvem gerado no VisualSFM
-	std::cout << "\n Exportando N-View Match (.nvm)\n";
-	pba.exportNVM(this->m_outputPath); // .nvm
+	std::cout << "   Exportando N-View Match (*.nvm)\n";
+	pba.exportNVM(outputDir); // .nvm
 
-	// FIM, liberar memória
+	// liberar memória
 	// ...
 }
 
@@ -436,7 +439,7 @@ void PointCloud::computeSparse() {
 // 		}
 
 // 		ofs.close();
-// 		std::cout << "  Exportado: \"" << outputPath.string() << "\"\n";
+// 		std::cout << "  Exportado: " << outputPath.string() << "\n";
 // 	} else {
 // 		std::cout << "  Erro ao abrir arquivo: " << filename << std::endl;
 // 	}

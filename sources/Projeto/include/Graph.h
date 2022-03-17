@@ -32,8 +32,8 @@ public:
 	void addPair(StereoPair* p);
 	size_t getModelSize();
 	void filterPoints();
-	void exportSFM(const fs::path& outputDir = "./output/", const std::string& filename = "pose.sfm");
-	void exportOBJ(const fs::path& outputDir = "./output/", const std::string& filename = "point_cloud.obj");
+	void exportSFM(const fs::path& outputDir, const std::string& filename = "pose.sfm");
+	void exportOBJ(const fs::path& outputDir, const std::string& filename = "point_cloud.obj");
 };
 
 #endif // GRAPH_H

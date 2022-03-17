@@ -38,7 +38,7 @@ void Graph::mergeWith(Graph* other) {
 	// atualizando a origem da c�mera
 	other->m_cameras.back()->updateOrigin(this->m_cameras.back()->m_P);
 
-	std::cout << " Adicionando camera na cena: \"" << this->m_cameras.back()->m_pathToImage << "\"\n";
+	std::cout << "   Adicionando camera na cena: " << this->m_cameras.back()->m_pathToImage << '\n';
 	this->m_cameras.emplace_back(other->m_cameras.back());
 	this->mergeTracks(other->m_tracks);
 }
@@ -122,9 +122,9 @@ void Graph::exportSFM(const fs::path& outputDir, const std::string& filename) {
 		for (Camera* cam : this->m_cameras)
 			ofs << cam->sfmString();
 		ofs.close();
-		std::cout << "  Exportado: \"" << outputPath.string() << "\"\n";
+		std::cout << "   Exportado: " << filename << '\n';
 	} else {
-		std::cout << "  Erro ao abrir arquivo: " << filename << std::endl;
+		std::cout << "   Erro ao abrir arquivo: " << filename << std::endl;
 	}
 }
 
@@ -146,8 +146,8 @@ void Graph::exportOBJ(const fs::path& outputDir, const std::string& filename) {
 				ofs << "v " << pt.x << " " << pt.y << " " << pt.z << '\n';
 		}
 		ofs.close();
-		std::cout << "  Exportado: \"" << outputPath.string() << "\"\n";
+		std::cout << "   Exportado: " << filename << '\n';
 	} else {
-		std::cout << "  Erro ao abrir arquivo: " << filename << std::endl;
+		std::cout << "   Erro ao abrir arquivo: " << filename << std::endl;
 	}
 }
