@@ -16,7 +16,6 @@ namespace fs = std::filesystem; // filesystem namespace alias
 #include <PointCloud.h>
 // #include <SurfaceReconstruction.h>
 
-
 /********** Variáveis de controle **********/
 
 namespace ctrl {
