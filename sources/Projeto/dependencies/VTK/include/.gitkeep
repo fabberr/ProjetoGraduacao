@@ -1,5 +1,5 @@
 # 
 # This is a dummy file, not part of the git spec. Used to force git to track 
 # this directory but not any files on it.
-# This directory is intended for storing VTK's library files.
+# This directory is intended for storing VTK's header files.
 # 
