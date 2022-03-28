@@ -37,7 +37,7 @@ bool compute_dense{false}; /* Flag -- indica se deve computar a nuvem densa ao i
 /* Exibe a mensagem de ajuda do programa. */
 void printHelp() {
 	std::cout << 
-		"Uso: ./ProjetoGrad <input_path> [output_path] [OPTIONS]\n\n" 
+		"Uso: ./Projeto <input_path> [output_path] [OPTIONS]\n\n" 
 		"<input_path>:\n" 
 		"    Caminho do diretorio contendo o dataset usado para computar a nuvem de\n" 
 		"    pontos esparsa. Ao final da execucao, serao gerados tres arquivos:\n" 
@@ -57,7 +57,7 @@ void printHelp() {
 		"    --count:\n" 
 		"        Especifica o total de imagens do dataset que serao usadas.\n" 
 		"    --dense:\n" 
-		"        Computa a nuvem de pontos densa, usando o diretorio especificado em input_path\n" 
+		"        Computa a nuvem de pontos densa, usando o diretorio especificado em `input_path`\n" 
 		"        para localizar o arquivo de calibracao das cameras (*.sfm).\n"
 	<< std::endl;
 }
@@ -105,7 +105,7 @@ void parse(int argc, const char* const* argv) {
 }
 
 // main entry point
-// ./Projeto "C:/code/cpp/ProjetoGraduacao/datasets/gargoyle" "C:/code/cpp/ProjetoGraduacao/output"
+// ~/dev/cpp/ProjetoGraduacao/build/Projeto/Projeto ~/dev/cpp/ProjetoGraduacao/datasets/gargoyle ~/dev/cpp/ProjetoGraduacao/output
 int main(int argc, char** argv) {
 
 	// analisa os argumentos da linha de comando
