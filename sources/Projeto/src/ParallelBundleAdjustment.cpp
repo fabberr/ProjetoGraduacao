@@ -165,9 +165,9 @@ void ParallelBundleAdjustment::exportNVM(const fs::path& outputDir, const std::s
 		}
 
 		ofs.close();
-		std::cout << "   Exportado: " << filename << '\n';
+		std::cout << "     Exportado: " << filename << '\n';
 	} else {
-		std::cout << "   Erro ao abrir arquivo: " << filename << std::endl;
+		std::cout << "     Erro ao abrir arquivo: " << filename << std::endl;
 	}
 }
 
@@ -189,9 +189,9 @@ void ParallelBundleAdjustment::exportOBJ(const fs::path& outputDir, const std::s
 				ofs << "v " << pt.x << " " << pt.y << " " << pt.z << '\n';
 		}
 		ofs.close();
-		std::cout << "   Exportado: " << filename << '\n';
+		std::cout << "     Exportado: " << filename << '\n';
 	}
 	else {
-		std::cout << "   Erro ao abrir arquivo: " << filename << std::endl;
+		std::cout << "     Erro ao abrir arquivo: " << filename << std::endl;
 	}
 }

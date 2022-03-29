@@ -122,9 +122,9 @@ void Graph::exportSFM(const fs::path& outputDir, const std::string& filename) {
 		for (Camera* cam : this->m_cameras)
 			ofs << cam->sfmString();
 		ofs.close();
-		std::cout << "   Exportado: " << filename << '\n';
+		std::cout << "     Exportado: " << filename << '\n';
 	} else {
-		std::cout << "   Erro ao abrir arquivo: " << filename << std::endl;
+		std::cout << "     Erro ao abrir arquivo: " << filename << std::endl;
 	}
 }
 
@@ -146,8 +146,8 @@ void Graph::exportOBJ(const fs::path& outputDir, const std::string& filename) {
 				ofs << "v " << pt.x << " " << pt.y << " " << pt.z << '\n';
 		}
 		ofs.close();
-		std::cout << "   Exportado: " << filename << '\n';
+		std::cout << "     Exportado: " << filename << '\n';
 	} else {
-		std::cout << "   Erro ao abrir arquivo: " << filename << std::endl;
+		std::cout << "     Erro ao abrir arquivo: " << filename << std::endl;
 	}
 }
