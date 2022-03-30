@@ -1,4 +1,13 @@
+/********** Headers **********/
+
+// libc++
+#include <ostream> // std::cout, ...
+#include <fstream> 	// std::ofstream, ...
+
+// internos
 #include <Graph.h>
+
+/********** Definições de Graph.h **********/
 
 // Construtor default
 Graph::Graph() {}
@@ -115,7 +124,7 @@ void Graph::exportSFM(const fs::path& outputDir, const std::string& filename) {
 	}
 
 	fs::path outputPath = outputDir/filename; // caminho do arquivo
-	std::ofstream ofs(outputPath.string(), ios::trunc | ios::out); // output file stream, cria ou abre o arquivo no modo truncate
+	std::ofstream ofs(outputPath.string(), std::ios::trunc | std::ios::out); // output file stream, cria ou abre o arquivo no modo truncate
 	if (ofs.is_open()) {
 		ofs << this->m_cameras.size() << "\n\n";
 
@@ -137,7 +146,7 @@ void Graph::exportOBJ(const fs::path& outputDir, const std::string& filename) {
 	}
 
 	fs::path outputPath = outputDir/filename; // caminho do arquivo
-	std::ofstream ofs(outputPath.string(), ios::trunc | ios::out); // output file stream, cria ou abre o arquivo no modo truncate
+	std::ofstream ofs(outputPath.string(), std::ios::trunc | std::ios::out); // output file stream, cria ou abre o arquivo no modo truncate
 	if (ofs.is_open()) {
 		cv::Point3f pt;
 		for (Track* t : this->m_tracks) {

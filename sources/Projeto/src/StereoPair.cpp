@@ -1,4 +1,10 @@
+/********** Headers **********/
+
+// internos
 #include <StereoPair.h>
+#include <MathUtils.h>
+
+/********** Definições de StereoPair.h **********/
 
 // Construtor default
 StereoPair::StereoPair() {

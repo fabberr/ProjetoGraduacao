@@ -1,25 +1,45 @@
+/********** Headers **********/
+
+// libc++
+#include <iostream>
+
+// internal
 #include <Camera.h>
+#include <MathUtils.h>
+
+/********** Definições de Camera.h **********/
 
 // Construtor default
-Camera::Camera() {
-	m_pathToImage = "";
-	m_image = cv::Mat();
-	m_K = cv::Mat();
-}
+Camera::Camera() : 
+	m_pathToImage{""}, 
+	m_image{cv::Mat()}, 
+	m_keypoints{}, 
+	m_descriptors{}, 
+	m_K{cv::Mat()}, 
+	m_P{}
+{ }
 
 // Construtor
-Camera::Camera(const std::string& pathToImage) {
-	this->m_pathToImage = pathToImage;
-	this->m_image = cv::imread(pathToImage, cv::ImreadModes::IMREAD_GRAYSCALE);
-	this->m_K = defaultIntrinsic();
+Camera::Camera(const std::string& pathToImage) : 
+	m_pathToImage{pathToImage}, 
+	m_image{cv::imread(m_pathToImage, cv::ImreadModes::IMREAD_UNCHANGED)}, 
+	m_keypoints{}, 
+	m_descriptors{}, 
+	m_K{this->defaultIntrinsic()}, 
+	m_P{}
+{
+	std::cout << 
+		"-- Instanciando objeto Camera:\n" 
+		"m_image.data=" << std::boolalpha << (m_image.data == nullptr) << std::noboolalpha << '\n'
+	<< std::endl;
 }
 
 // Destrutor
 Camera::~Camera() {}
 
-// Cria e retorna uma matriz intr�nseca K com valores padr�o
+// Cria e retorna uma matriz intrínseca K com valores padrão
 cv::Mat_<double> Camera::defaultIntrinsic() {
-	double f = 1.2 * std::max(m_image.rows, m_image.cols); // dist�ncia focal
+	double f = 1.2 * std::max(m_image.rows, m_image.cols); // distância focal
 	return (cv::Mat_<double>(3, 3) << 
 		f, 0, m_image.cols / 2,
 		0, f, m_image.rows / 2,
@@ -33,7 +53,7 @@ void Camera::detectAndCompute(int nfeatures) {
 	sift_f2d->detectAndCompute(m_image, cv::noArray(), m_keypoints, m_descriptors);
 }
 
-// Obtem vetor de visao (vetor double R3) usado no c�culo do angulo entre as c�meras
+// Obtem vetor de visao (vetor double R3) usado no cáculo do angulo entre as câmeras
 void Camera::getViewVector(double* outViewVector) {
 	double* p1 = new double[3]{ .0, .0, .0 };
 	double* p2 = new double[3]{ .0, .0, .5 };
@@ -46,7 +66,7 @@ void Camera::getViewVector(double* outViewVector) {
 	delete[] p2;
 }
 
-// Calcula o �ngulo (em graus) entre essa c�mera e outra
+// Calcula o Ângulo (em graus) entre esta câmera e outra
 double Camera::angleBetween(Camera* other) {
 	double* thisViewVector = new double[3];
 	double* otherViewVector = new double[3];
@@ -60,7 +80,7 @@ double Camera::angleBetween(Camera* other) {
 	return angle;
 }
 
-// Atualiza a origem da c�mera a partir de uma matriz extr�nsseca
+// Atualiza a origem da câmera a partir de uma matriz extrínsseca
 void Camera::updateOrigin(cv::Matx34f newOrigin) {
 	cv::Mat R01 = cv::Mat_<double>(3, 3);
 	cv::Mat t01 = cv::Mat_<double>(3, 1);
@@ -90,7 +110,7 @@ void Camera::updateOrigin(cv::Matx34f newOrigin) {
 		this->m_P(i, 3) = t01.at<double>(i, 0) + this->m_P(i, 3);
 }
 
-// Gera uma string que representa essa c�mera no formato .sfm
+// Gera uma string que representa essa câmera no formato .sfm
 std::string Camera::sfmString() {
 	std::string sfm("");
 

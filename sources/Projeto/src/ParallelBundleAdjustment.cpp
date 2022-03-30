@@ -1,4 +1,13 @@
+/********** Headers **********/
+
+// libc++
+#include <iostream> // std::cout, ...
+#include <fstream> 	// std::ofstream, ...
+
+// internos
 #include <ParallelBundleAdjustment.h>
+
+/********** Definições de ParallelBundleAdjustment.h **********/
 
 // Construtor default
 ParallelBundleAdjustment::ParallelBundleAdjustment() {
@@ -126,7 +135,7 @@ void ParallelBundleAdjustment::exportNVM(const fs::path& outputDir, const std::s
 		fs::create_directories(outputDir);
 
 	fs::path outputPath = outputDir/filename; // caminho do arquivo
-	std::ofstream ofs(outputPath.string(), ios::trunc | ios::out); // output file stream, cria ou abre o arquivo no modo truncate
+	std::ofstream ofs(outputPath.string(), std::ios::trunc | std::ios::out); // output file stream, cria ou abre o arquivo no modo truncate
 	if (ofs.is_open()) {
 		ofs << "NVM_V3_R9T\n";
 		ofs << this->m_cameraData.size() << '\n' << std::setprecision(12);
@@ -180,7 +189,7 @@ void ParallelBundleAdjustment::exportOBJ(const fs::path& outputDir, const std::s
 	}
 
 	fs::path outputPath = outputDir/filename; // caminho do arquivo
-	std::ofstream ofs(outputPath.string(), ios::trunc | ios::out); // output file stream, cria ou abre o arquivo no modo truncate
+	std::ofstream ofs(outputPath.string(), std::ios::trunc | std::ios::out); // output file stream, cria ou abre o arquivo no modo truncate
 	if (ofs.is_open()) {
 		cv::Point3f pt;
 		for (Track* t : this->m_graph->m_tracks) {

@@ -12,7 +12,7 @@ namespace fs = std::filesystem; // filesystem namespace alias
 #include <cstring> 	// strncmp
 #include <cstdlib>	// strtol, exit
 
-// internal
+// internos
 #include <PointCloud.h>
 // #include <SurfaceReconstruction.h>
 

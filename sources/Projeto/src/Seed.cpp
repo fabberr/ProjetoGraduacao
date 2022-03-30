@@ -1,4 +1,12 @@
+/********** Headers **********/
+
+// VTK
+#include <vtk-9.1/vtkType.h> // VTK_DOUBLE_MAX
+
+// internos
 #include <Seed.h>
+
+/********** Definições de Seed.h **********/
 
 Seed::Seed() {
 	this->m_p1 = cv::Point2f(-1, -1);

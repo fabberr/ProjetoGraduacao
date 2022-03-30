@@ -1,12 +1,20 @@
 #ifndef SEED_H
 #define SEED_H
 
+/********** Headers **********/
+
+// libc++
 #include <iostream>
 #include <vector>
+
+// OpenCV
 #include <opencv2/opencv.hpp>
 
+// internos
 #include <Camera.h>
 #include <Keypoint.h>
+
+/********** Seed.h **********/
 
 class Seed {
 private:

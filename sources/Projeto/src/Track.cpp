@@ -1,4 +1,12 @@
+/********** Headers **********/
+
+// VTK
+#include <vtk-9.1/vtkType.h> // VTK_DOUBLE_MAX
+
+// internos
 #include <Track.h>
+
+/********** Definições de Track.h **********/
 
 // Construtor default
 Track::Track() {
