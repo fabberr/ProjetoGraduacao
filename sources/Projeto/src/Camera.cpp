@@ -28,9 +28,9 @@ cv::Mat_<double> Camera::defaultIntrinsic() {
 }
 
 // Detecta os keypoints e computa seus descritores
-void Camera::detectAndCompute(bool useNfeatures) {
-	cv::Ptr<cv::AKAZE> akaze_f2d = cv::AKAZE::create();
-	akaze_f2d->detectAndCompute(m_image, cv::noArray(), m_keypoints, m_descriptors);
+void Camera::detectAndCompute(int nfeatures) {
+	cv::Ptr<cv::SIFT> sift_f2d = cv::SIFT::create(nfeatures);
+	sift_f2d->detectAndCompute(m_image, cv::noArray(), m_keypoints, m_descriptors);
 }
 
 // Obtem vetor de visao (vetor double R3) usado no c�culo do angulo entre as c�meras

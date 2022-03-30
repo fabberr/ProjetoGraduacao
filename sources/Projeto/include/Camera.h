@@ -15,6 +15,7 @@ namespace fs = std::filesystem;
 * Cont�m uma imagem, matriz intr�nseca, lista de keypoints detectados e seus descritores
 */
 class Camera {
+
 public:
 	//----- Membros
 	std::string					m_pathToImage;	// caminho absoluto at� a imagem
@@ -23,16 +24,17 @@ public:
 	cv::Mat						m_descriptors;	// descritores computados
 	cv::Mat						m_K;			// matriz intr�nseca http://ksimek.github.io/2013/08/13/intrinsic/
 	cv::Matx34f					m_P;			// matriz extr�nsseca (pose) https://ksimek.github.io/2012/08/22/extrinsic/
-	const static int N_FEATURES = 9000;			// n�mero de features
 
+public:
 	//----- Construtores e destrutor
 	Camera();
 	Camera(const std::string& pathToImage);
 	~Camera();
 
+public:
 	//----- M�todos
 	cv::Mat_<double> defaultIntrinsic();
-	void detectAndCompute(bool useNfeatures = false);
+	void detectAndCompute(int nfeatures = 8000);
 	void getViewVector(double* outViewVector);
 	double angleBetween(Camera* other);
 	void updateOrigin(cv::Matx34f newOrigin);
