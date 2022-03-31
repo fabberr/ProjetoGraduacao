@@ -28,10 +28,12 @@ Camera::Camera(const std::string& pathToImage) :
 	m_K{this->defaultIntrinsic()}, 
 	m_P{}
 {
+#ifdef DEBUG
 	std::cout << 
 		"-- Instanciando objeto Camera:\n" 
 		"m_image.data=" << std::boolalpha << (m_image.data == nullptr) << std::noboolalpha << '\n'
 	<< std::endl;
+#endif
 }
 
 // Destrutor
