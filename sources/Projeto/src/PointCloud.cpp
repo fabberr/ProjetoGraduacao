@@ -17,13 +17,15 @@ PointCloud::PointCloud(const fs::path& datasetPath, const fs::path& outputPath, 
 	m_outputPath{outputPath}, 
 	m_imgCount{imgCount}
 {
-	std::string count = (m_imgCount) ? std::to_string(imgCount) : "ALL";
+#if defined (DEBUG) || defined (_DEBUG)
+	std::string count = (m_imgCount) ? std::to_string(imgCount) : "Desconhecido (use todas)";
 	std::cout << 
 		"-- Instanciando objeto PointCloud:\n"
 		"   m_inputPath: " << m_inputPath.string() << "\n"
 		"   m_outputPath: " << m_outputPath.string() << "\n"
 		"   m_imgCount: " << count << "\n"
 	<< std::endl;
+#endif
 }
 
 // Destrutor

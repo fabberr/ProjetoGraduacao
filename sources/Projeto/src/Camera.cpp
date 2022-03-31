@@ -10,28 +10,23 @@
 /********** Definições de Camera.h **********/
 
 // Construtor default
-Camera::Camera() : 
-	m_pathToImage{""}, 
-	m_image{cv::Mat()}, 
-	m_keypoints{}, 
-	m_descriptors{}, 
-	m_K{cv::Mat()}, 
-	m_P{}
-{ }
+Camera::Camera() {
+	this->m_pathToImage = "";
+	this->m_image = cv::Mat();
+	this->m_K = cv::Mat();
+}
 
 // Construtor
-Camera::Camera(const std::string& pathToImage) : 
-	m_pathToImage{pathToImage}, 
-	m_image{cv::imread(m_pathToImage, cv::ImreadModes::IMREAD_UNCHANGED)}, 
-	m_keypoints{}, 
-	m_descriptors{}, 
-	m_K{this->defaultIntrinsic()}, 
-	m_P{}
-{
-#ifdef DEBUG
+Camera::Camera(const std::string& pathToImage) {
+	this->m_pathToImage = pathToImage;
+	this->m_image = cv::imread(pathToImage, cv::ImreadModes::IMREAD_GRAYSCALE);
+	this->m_K = defaultIntrinsic();
+
+#if defined (DEBUG) || defined (_DEBUG)
 	std::cout << 
 		"-- Instanciando objeto Camera:\n" 
-		"m_image.data=" << std::boolalpha << (m_image.data == nullptr) << std::noboolalpha << '\n'
+		"   m_image.data=" << std::boolalpha << (m_image.data != nullptr) << std::noboolalpha << "\n"
+		"   dimensoes=" << m_image.rows << 'x' << m_image.cols << "px\n"
 	<< std::endl;
 #endif
 }
