@@ -104,10 +104,12 @@ void parse(int argc, const char* const* argv) {
 	}
 }
 
-// main entry point
-// ~/dev/cpp/ProjetoGraduacao/build/Projeto/Projeto ~/dev/cpp/ProjetoGraduacao/datasets/gargoyle ~/dev/cpp/ProjetoGraduacao/output
-int main(int argc, char** argv) {
+#include <opencv4/opencv2/opencv.hpp>
 
+// main entry point
+// build/Projeto/Projeto ~/dev/cpp/ProjetoGraduacao/datasets/gargoyle ~/dev/cpp/ProjetoGraduacao/output
+int main(int argc, char** argv) {
+	
 	// analisa os argumentos da linha de comando
 	parse(argc, argv);
 

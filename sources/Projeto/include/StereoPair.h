@@ -7,7 +7,7 @@
 #include <string>
 
 // 3rd party
-#include <opencv2/opencv.hpp>
+#include <opencv4/opencv2/opencv.hpp>
 
 // #include <pcl/point_types.h>
 // #include <pcl/features/normal_3d.h>
