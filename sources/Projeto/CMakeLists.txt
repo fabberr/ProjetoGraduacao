@@ -31,7 +31,7 @@ set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
 message(STATUS "Searching for OpenCV package")
 find_package(
 	OpenCV 4.5.5 REQUIRED 
-	COMPONENTS core imgcodecs imgproc features2d flann calib3d
+	COMPONENTS core imgcodecs imgproc features2d flann calib3d xfeatures2d sfm
 )
 
 # Setting up VTK
