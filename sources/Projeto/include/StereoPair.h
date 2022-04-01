@@ -6,8 +6,8 @@
 #include <mutex>
 #include <string>
 
-// 3rd party
-#include <opencv4/opencv2/opencv.hpp>
+// OpenCV
+#include <opencv2/opencv.hpp>
 
 // #include <pcl/point_types.h>
 // #include <pcl/features/normal_3d.h>

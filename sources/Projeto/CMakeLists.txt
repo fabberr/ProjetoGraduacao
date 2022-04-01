@@ -48,7 +48,9 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/PBA")
 target_include_directories(
 	${PROJECT_NAME} 
 	PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include" 					# internal header files
-	PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/PBA/include"	# PBA 1.0.6
+	PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/PBA/include" 	# pba/
+	PRIVATE "/usr/local/include" 									# vtk-9.1/
+	PRIVATE "/usr/local/include/opencv4" 							# opencv2/
 )
 
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${VTK_LIBRARIES} libpba)

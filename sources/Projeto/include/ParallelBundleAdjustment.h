@@ -5,12 +5,14 @@
 #include <vector>
 #include <string>
 
-// 3rd-party
-#include <opencv4/opencv2/opencv.hpp>
+// OpenCV
+#include <opencv2/opencv.hpp>
 
+// PBA
 #include <pba/pba.h>
 #include <pba/DataInterface.h>
 
+// PCL
 // #include <pcl/point_types.h>
 // #include <pcl/features/normal_3d.h>
 // #include <pcl/features/normal_3d_omp.h>
