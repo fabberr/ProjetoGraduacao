@@ -25,6 +25,7 @@ Camera::Camera(const std::string& pathToImage) {
 #if defined (DEBUG) || defined (_DEBUG)
 	std::cout << 
 		"-- Instanciando objeto Camera:\n" 
+		"   m_pathToImage=" << m_pathToImage << "\n"
 		"   m_image.data=" << std::boolalpha << (m_image.data != nullptr) << std::noboolalpha << "\n"
 		"   dimensoes=" << m_image.rows << 'x' << m_image.cols << "px\n"
 	<< std::endl;
