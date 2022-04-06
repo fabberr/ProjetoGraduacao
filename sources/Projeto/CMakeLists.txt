@@ -1,18 +1,23 @@
 # Target name
 project(Projeto)
 
+# Setting variables
+set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
 # Creating executable target
 add_executable(
 	${PROJECT_NAME} 
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/Camera.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/Graph.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/Keypoint.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/ParallelBundleAdjustment.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/PointCloud.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/Seed.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/StereoPair.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/Track.cpp"
+	"${SRC_DIR}/main.cpp"
+	"${SRC_DIR}/cmdline_parser.cpp"
+	"${SRC_DIR}/Camera.cpp"
+	"${SRC_DIR}/Graph.cpp"
+	"${SRC_DIR}/Keypoint.cpp"
+	"${SRC_DIR}/ParallelBundleAdjustment.cpp"
+	"${SRC_DIR}/PointCloud.cpp"
+	"${SRC_DIR}/Seed.cpp"
+	"${SRC_DIR}/StereoPair.cpp"
+	"${SRC_DIR}/Track.cpp"
 )
 
 # Setting target's properties
@@ -47,7 +52,7 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/PBA")
 # Setting include directories and linking libraries
 target_include_directories(
 	${PROJECT_NAME} 
-	PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include" 					# internal header files
+	PRIVATE ${INCLUDE_DIR} 											# internal header files
 	PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/PBA/include" 	# pba/
 	PRIVATE "/usr/local/include" 									# vtk-9.1/
 	PRIVATE "/usr/local/include/opencv4" 							# opencv2/
