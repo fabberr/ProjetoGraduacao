@@ -10,4 +10,4 @@ output
 
 # Executable (exclude symlink on my machine but keep directory of the name name)
 Projeto
-!/sources/Projeto/**
+!/sources/Projeto/
