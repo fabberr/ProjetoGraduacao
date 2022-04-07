@@ -8,15 +8,16 @@ set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 # Creating executable target
 add_executable(
 	${PROJECT_NAME} 
-	"${SRC_DIR}/main.cpp"
-	"${SRC_DIR}/cmdline_parser.cpp"
-	"${SRC_DIR}/Camera.cpp"
-	"${SRC_DIR}/Graph.cpp"
-	"${SRC_DIR}/Keypoint.cpp"
-	"${SRC_DIR}/ParallelBundleAdjustment.cpp"
-	"${SRC_DIR}/PointCloud.cpp"
-	"${SRC_DIR}/Seed.cpp"
-	"${SRC_DIR}/StereoPair.cpp"
+	"${SRC_DIR}/main.cpp" 
+	"${SRC_DIR}/cmdline_parser.cpp" 
+	"${SRC_DIR}/sfmPointCloud.cpp"
+	"${SRC_DIR}/Camera.cpp" 
+	"${SRC_DIR}/Graph.cpp" 
+	"${SRC_DIR}/Keypoint.cpp" 
+	"${SRC_DIR}/ParallelBundleAdjustment.cpp" 
+	"${SRC_DIR}/PointCloud.cpp" 
+	"${SRC_DIR}/Seed.cpp" 
+	"${SRC_DIR}/StereoPair.cpp" 
 	"${SRC_DIR}/Track.cpp"
 )
 
