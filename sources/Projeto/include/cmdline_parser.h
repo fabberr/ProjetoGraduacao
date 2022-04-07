@@ -41,7 +41,7 @@ fs::path input_file{}; 				/* Caminho até o arquivo que lista os caminhos das i
 fs::path output_path{"./output/"}; 	/* Caminho até o diretório de saída. */
 
 // variáveis de controle: parâmetros intrínsecos da câmera
-float f{}; 			/** Distância focal da camera. */
+float f{}; 			/** Distância focal da câmera. */
 float cx{}, cy{}; 	/** Offset do ponto principal (x, v) da câmera. */
 
 // funções (declaração)

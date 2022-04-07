@@ -30,7 +30,7 @@ void ctrl::help(std::ostream& os) {
 		"<f>:\n" 
 		"    Distancia Focal da camera.\n" 
 		"<cx> e <cy>:\n" 
-		"    Coordenadas X e Y do Ponto Central da camera, respectivamente.\n" 
+		"    Offsets X e Y do Ponto Principal da camera, respectivamente.\n" 
 		"\n" 
 		"OPTIONS:\n" 
 		"    --help, -h:\n" 
