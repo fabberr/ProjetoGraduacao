@@ -2,12 +2,13 @@
 
 // internos
 #include <cmdline_parser.h>
+#include <sfmPointCloud.h>
 
 // main entry point
 // ./Projeto datasets/gargoyle/00_absolute_paths.txt <f> <cx> <cy> -o ~/dev/cpp/ProjetoGraduacao/output
 int main(int argc, char** argv) {
 
-	ctrl::parse(argc, argv);
+	sfmPointCloud{ctrl::parse(argc, argv)}.compute_sparse();
 
 	return 0;
 }
