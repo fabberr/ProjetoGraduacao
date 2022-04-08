@@ -7,12 +7,12 @@
 namespace fs = std::filesystem; // filesystem namespace alias
 
 // libc
-#include <cstdio> 	// fprintf, stdout, stderr, EXIT_FAILURE, EXIT_SUCCESS
-#include <cstdlib>	// strtof, exit
+#include <cstdlib> 	// strtof, exit, EXIT_FAILURE, EXIT_SUCCESS
 #include <cstring> 	// strncmp
 
 // internos
 #include <cmdline_parser.h>
+#include <logger.h>
 
 /********** Macros **********/
 
@@ -23,9 +23,7 @@ namespace fs = std::filesystem; // filesystem namespace alias
 #define ARG_CY 				argv[ctrl::args::PRINCIPAL_Y_IDX]
 
 // function-like macros
-#define log_error_and_exit(msg, ...) 	std::fprintf(stderr, "[ERROR]: " msg __VA_OPT__(,) __VA_ARGS__); std::exit(EXIT_FAILURE)
-#define log_info(msg, ...) 				std::fprintf(stdout, "[INFO]: " msg __VA_OPT__(,) __VA_ARGS__)
-#define display_help_and_exit() 		ctrl::help(); std::exit(EXIT_SUCCESS)
+#define display_help_and_exit() ctrl::help(); std::exit(EXIT_SUCCESS)
 
 /********** Funções (definição) **********/
 
@@ -57,7 +55,7 @@ void ctrl::help(std::ostream& os) {
 
 /** 
  * Analisa a linha de comando e retorna um objeto contendo os argumentos 
- * extraídos da linha de comando.
+ * extraídos.
  * 
  * Caso um erro de validação seja encontrado, o programa termina a execução com 
  * código de status `EXIT_FAILURE`.
