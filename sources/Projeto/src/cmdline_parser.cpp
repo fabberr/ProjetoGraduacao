@@ -76,7 +76,7 @@ ctrl::args ctrl::parse(const int argc, const char* const* argv) {
 
 	// extraindo e validando argumento obrigatório <input_path>
 	if (extracted.input_path = ARG_INPUT_PATH; !fs::exists(extracted.input_path) || !fs::is_directory(extracted.input_path)) {
-		log_error_and_exit("Arquivo de entrada `%s` nao existe ou nao e valido\n", ARG_INPUT_PATH);
+		log_error_and_exit("Diretorio de entrada `%s` nao existe ou nao e valido\n", ARG_INPUT_PATH);
 	}
 
 	// extraindo e validando argumento obrigatório <f>
