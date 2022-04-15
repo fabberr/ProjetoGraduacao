@@ -5,14 +5,14 @@
 
 // libc++
 #include <vector>
+#include <string>
 #include <filesystem>
 
 namespace fs = std::filesystem;
 
 // OpenCV
-#include <opencv2/core.hpp>
-#include <opencv2/calib3d.hpp>
-#include <opencv2/sfm.hpp>
+#include <opencv2/core.hpp> 	// core functionality and types
+#include <opencv2/calib3d.hpp> 	// cv::Affine
 
 // internos
 #include <cmdline_parser.h>
@@ -20,13 +20,13 @@ namespace fs = std::filesystem;
 /********** sfmPointCloud.h **********/
 
 /**
- * Implementa os algoritmos do módulo cv::sfm.
+ * Wrapper class para os algoritmos de reconstrução do módulo cv::sfm.
 */
 class sfmPointCloud {
 private:
 	/********** Membros Privados **********/
 	const ctrl::args& 			_args; 			/** Argumentos validados extraídos da linha de comando. */
-	std::vector<fs::path> 		_images; 		/** Caminhos absolutos até as imagens do dataset. */
+	std::vector<std::string> 	_images; 		/** Caminhos absolutos até as imagens do dataset. */
 	cv::Mat 					_K; 			/** Matriz intrínseca K estimada. Inicialmente derivada dos argumentos <f>, <cx> e <cy>. */
 	std::vector<cv::Affine3d> 	_Rts; 			/** Matrizes extrínsecas Rt estimadas para cada câmera. */
 	std::vector<cv::Mat> 		_points3d; 		/** Pontos 3D estimados. */
@@ -45,8 +45,8 @@ public:
 private:
 	/********** Funções Membro Privadas **********/
 
-	void export_cloud_OBJ(const fs::path& output_dir = "./output/") const;
-	void export_pose_SFM(const fs::path& output_dir = "./output/") const;
+	void export_cloud_OBJ(const std::string& filename, const fs::path& output_dir = "./output/") const;
+	void export_pose_SFM(const std::string& filename, const fs::path& output_dir = "./output/") const;
 
 public:
 	/********** Funções Membro Públicas **********/
