@@ -45,6 +45,7 @@ public:
 private:
 	/********** Funções Membro Privadas **********/
 
+	bool validate_output_path(const fs::path& output_dir = "./output/") const;
 	void export_cloud_OBJ(const std::string& filename, const fs::path& output_dir = "./output/") const;
 	void export_pose_SFM(const std::string& filename, const fs::path& output_dir = "./output/") const;
 

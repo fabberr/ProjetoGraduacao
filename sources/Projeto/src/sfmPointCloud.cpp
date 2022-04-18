@@ -15,6 +15,7 @@ namespace fs = std::filesystem; // filesystem namespace alias
 // libc
 #include <cstddef> 	// std::size_t
 #include <cstring> 	// strncpm
+#include <cstdint> 	// uint_t
 
 // OpenCV
 #include <opencv2/core.hpp>
@@ -134,27 +135,45 @@ void sfmPointCloud::compute_sparse() {
 
 /********** Implementação Funções Membro Privadas **********/
 
-/** Exporta a nuvem de pontos como um arquivo .obj (apens lista de vértices). */
-void sfmPointCloud::export_cloud_OBJ(const std::string& filename, const fs::path& output_dir) const {
+/**
+ * Verifica se o diretório de saída é válido e tenta criá-lo caso não exista.
+ * 
+ * @returns `true` caso o caminho até o diretório de saída é válido, `false` 
+ * caso contrário.
+*/
+bool sfmPointCloud::validate_output_path(const fs::path& output_dir) const {
 
-	// verifica se o diretório de saída existe e tenta criá-lo caso contrário
 	if (!fs::exists(output_dir)) {
 		std::error_code ec;
 		if (!fs::create_directories(output_dir, ec)) {
-			log_error_and_exit(
-				"sfmPointCloud::export_cloud_OBJ - Nao foi possivel criar diretorio de saida `%s`:\n"
+			log_error(
+				"sfmPointCloud::export_pose_SFM - Nao foi possivel criar diretorio de saida `%s`:\n"
 				"%s\n", 
 				output_dir.c_str(), 
 				ec.message().c_str()
 			);
+			return false;
 		}
+	}
+	return true;
+}
+
+/** Exporta a nuvem de pontos como um arquivo .obj (apens lista de vértices). */
+void sfmPointCloud::export_cloud_OBJ(const std::string& filename, const fs::path& output_dir) const {
+
+	if (!validate_output_path(output_dir)) {
+		log_info("sfmPointCloud::export_cloud_OBJ: Impossivel exportar arquivo `%s`\n", filename.c_str());
+		return;
 	}
 
 	fs::path file_path = output_dir/filename;
 	if (std::ofstream file{file_path}; file.is_open()) { // cria/recria arquivo ("w" mode)
+
+		// lista de vértices
 		for (const auto& pt : _point_cloud) {
 			file << "v " << pt[0] << ' ' << pt[1] << ' ' << pt[2] << '\n'; // formato: "v <x> <y> <z>\n"
 		}
+
 		file.close();
 	} else {
 		log_error("Nao foi possivel abrir arquivo de saida `%s`\n", file_path.c_str());
@@ -163,5 +182,42 @@ void sfmPointCloud::export_cloud_OBJ(const std::string& filename, const fs::path
 
 /** Exporta as matrizes extrínsecas [R|t] estimados de cada câmera como um arquivo .sfm. */
 void sfmPointCloud::export_pose_SFM(const std::string& filename, const fs::path& output_dir) const {
-	// ...
+
+	if (!validate_output_path(output_dir)) {
+		log_info("sfmPointCloud::export_pose_SFM: Impossivel exportar arquivo `%s`\n", filename.c_str());
+		return;
+	}
+
+	fs::path file_path = output_dir/filename;
+	if (std::ofstream file{file_path}; file.is_open()) { // cria/recria arquivo ("w" mode)
+		file << _images.size() << "\n\n"; // número de câmeras
+
+		// formato: "<path> <rotation> <translation>\n"
+		for (std::size_t i = 0; i < _images.size(); ++i) {
+			// caminho absoluto até a imagem
+			file << _images[i] << ' ';
+
+			// componente R (matriz de rotação)
+			const auto& R = _Rts[i].rotation();
+			for (std::uint8_t j = 0; j < 3; ++j) {
+				for (std::uint8_t k = 0; k < 3; ++k) {
+					// [0][0] [0][1] [0][2] [1][0] [1][1] [1][2] [2][0] [2][1] [2][2] (primerias 3 linhas e colunas)
+					file << R(j, k) << ' ';
+				}
+			}
+
+			// componente t (vetor de translação)
+			const auto& t = _Rts[i].translation();
+			for (std::uint8_t j = 0; j < 3; ++j) {
+				// [0][3] [1][3] [2][3] (última coluna)
+				file << t[j] << ' ';
+			}
+
+			file << '\n';
+		}
+
+		file.close();
+	} else {
+		log_error("Nao foi possivel abrir arquivo de saida `%s`\n", file_path.c_str());
+	}	
 }
