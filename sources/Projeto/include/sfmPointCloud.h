@@ -29,7 +29,6 @@ private:
 	std::vector<std::string> 	_images; 		/** Caminhos absolutos até as imagens do dataset. */
 	cv::Mat 					_K; 			/** Matriz intrínseca K estimada. Inicialmente derivada dos argumentos <f>, <cx> e <cy>. */
 	std::vector<cv::Affine3d> 	_Rts; 			/** Matrizes extrínsecas Rt estimadas para cada câmera. */
-	std::vector<cv::Mat> 		_points3d; 		/** Pontos 3D estimados. */
 	std::vector<cv::Vec3f> 		_point_cloud; 	/** Nuvem de pontos esparsa. */
 
 public:
@@ -42,17 +41,15 @@ public:
 
 	virtual ~sfmPointCloud();
 
-private:
-	/********** Funções Membro Privadas **********/
-
-	bool validate_output_path(const fs::path& output_dir = "./output/") const;
-	void export_cloud_OBJ(const std::string& filename, const fs::path& output_dir = "./output/") const;
-	void export_pose_SFM(const std::string& filename, const fs::path& output_dir = "./output/") const;
-
 public:
 	/********** Funções Membro Públicas **********/
 	
 	void compute_sparse();
+
+private:
+	/********** Funções Membro Privadas **********/
+
+	void export_results() const;
 };
 
 #endif // SFM_POINT_CLOUD_H
