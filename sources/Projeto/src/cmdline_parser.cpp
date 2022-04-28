@@ -60,7 +60,7 @@ void ctrl::help(std::ostream& os) {
  * Caso um erro de validação seja encontrado, o programa termina a execução com 
  * código de status `EXIT_FAILURE`.
  * 
- * Caso o argumento ocional `--help` esteja presente ou argumentos obrigatórios 
+ * Caso o argumento opcional `--help` esteja presente ou argumentos obrigatórios 
  * insuficientes foram passados, o programa simplesmente exibe a mensagem de 
  * ajuda e termina a execução com código de status `EXIT_SUCCESS`.
 */

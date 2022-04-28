@@ -68,7 +68,7 @@ sfmPointCloud::sfmPointCloud(const ctrl::args& args) :
 			std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 			auto ext_lower = ext.c_str();
 			if (ext_whitelist.find(ext_lower) != ext_whitelist.end()) {
-				_images.emplace_back(entry.path().string());
+				_images.emplace_back(entry.path().c_str());
 			}
 		}
 

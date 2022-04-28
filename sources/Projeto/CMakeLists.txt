@@ -29,15 +29,14 @@ set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
 # Setting up OpenCV
 message(STATUS "Searching for OpenCV package")
 find_package(
-	OpenCV 4.5.5 REQUIRED 
-	COMPONENTS core imgcodecs imgproc features2d calib3d xfeatures2d sfm
+	OpenCV 3.4 REQUIRED 
+	COMPONENTS core imgcodecs imgproc features2d flann calib3d xfeatures2d sfm
 )
 
 # Setting include directories and linking libraries
 target_include_directories(
 	${PROJECT_NAME} 
-	PRIVATE ${INCLUDE_DIR} 					# internal header files
-	PRIVATE "/usr/local/include/opencv4" 	# opencv2/
+	PRIVATE ${INCLUDE_DIR} # internal header files
 )
 
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})

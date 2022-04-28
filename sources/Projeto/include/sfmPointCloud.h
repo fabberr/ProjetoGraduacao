@@ -26,7 +26,7 @@ class sfmPointCloud {
 private:
 	/********** Membros Privados **********/
 	const ctrl::args& 			_args; 			/** Argumentos validados extraídos da linha de comando. */
-	std::vector<std::string> 	_images; 		/** Caminhos absolutos até as imagens do dataset. */
+	std::vector<cv::String> 	_images; 		/** Caminhos absolutos até as imagens do dataset. */
 	cv::Mat 					_K; 			/** Matriz intrínseca K estimada. Inicialmente derivada dos argumentos <f>, <cx> e <cy>. */
 	std::vector<cv::Affine3d> 	_Rts; 			/** Matrizes extrínsecas Rt estimadas para cada câmera. */
 	std::vector<cv::Vec3f> 		_point_cloud; 	/** Nuvem de pontos esparsa. */
