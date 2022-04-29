@@ -21,7 +21,6 @@ namespace fs = std::filesystem; // filesystem namespace alias
 
 // OpenCV
 #include <opencv2/core.hpp>
-#include <opencv2/features2d.hpp>
 #include <opencv2/sfm.hpp>
 
 // internos
@@ -42,8 +41,8 @@ sfmPointCloud::sfmPointCloud(const ctrl::args& args) :
 	_Rts(),
 	_point_cloud()
 {
-	// executa uma função anônima que popula o vetor `_images` e retorna true se falhou
-	bool load_failed = [this]{
+	// executa uma função anônima que popula o vetor `_images` e retorna false se falhou
+	bool load_success = [this]{
 		// reservando espaço para o vetor `_images`, contando apenas arquivos regulares
 		bool (*pred)(const fs::path&) = fs::is_regular_file;
 		const size_t count = std::count_if(fs::directory_iterator(_args.input_path), fs::directory_iterator{}, pred); // begin, end, predicate
@@ -74,16 +73,25 @@ sfmPointCloud::sfmPointCloud(const ctrl::args& args) :
 
 		return _images.size(); // 0 == false
 	}();
-	if (load_failed) {
+	if (!load_success) {
 		log_error_and_exit("sfmPointCloud::sfmPointCloud: Nao foi possivel carregar imagens\n");
 	}
 
 	// construir K
-	_K = cv::Mat_<double>(3, 3) << (
-		(_args.f,    0   , _args.cx), 
-		(   0   , _args.f, _args.cy), 
-		(   0   ,    0   ,    1    )
+	_K = (cv::Mat_<double>(3, 3) << 
+		_args.f,    0   , _args.cx, 
+		   0   , _args.f, _args.cy, 
+		   0   ,    0   ,    1
 	);
+
+#if defined(_DEBUG) || defined(DEBUG)
+// debug build
+	std::cout << 
+		"Objeto sfmPointCloud instanciado:\n" 
+		"    Imagens carregadas: " << _images.size() << "\n" 
+		"    _K (inicial):\n" << _K << "\n"
+	<< std::endl;
+#endif
 }
 
 /** Destrutor (noop) */
@@ -99,7 +107,7 @@ void sfmPointCloud::compute_sparse() {
 	std::vector<cv::Mat> points3d_est; 		// pontos 3d estimados
 	cv::sfm::reconstruct(_images, Rs_est, ts_est, _K, points3d_est, true);
 
-	std::cout << 
+	std::cout << "\n"
 		"Pontos 3D estimados: "  << points3d_est.size() << "\n" 
 		"Cameras estimadas: " << Rs_est.size() << "\n" 
 		"Valores intrinsecos refinados:\n" << _K << "\n" 

@@ -5,7 +5,7 @@
 #include <sfmPointCloud.h>
 
 // main entry point
-// ./Projeto datasets/gargoyle <f> <cx> <cy> -o ~/dev/cpp/ProjetoGraduacao/output
+// ./pcloud datasets/gargoyle 800 576.0 1024.0 -o ~/dev/cpp/ProjetoGraduacao/output
 int main(int argc, char** argv) {
 
 	sfmPointCloud{ctrl::parse(argc, argv)}.compute_sparse();
