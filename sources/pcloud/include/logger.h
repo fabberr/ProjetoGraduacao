@@ -9,8 +9,8 @@
 
 /********** logger.h **********/
 
-#define log_error_and_exit(msg, ...) 	std::fprintf(stderr, "[ERRO]: " msg __VA_OPT__(,) __VA_ARGS__); std::exit(EXIT_FAILURE)
-#define log_error(msg, ...) 			std::fprintf(stderr, "[ERRO]: " msg __VA_OPT__(,) __VA_ARGS__)
-#define log_info(msg, ...) 				std::fprintf(stdout, "[INFO]: " msg __VA_OPT__(,) __VA_ARGS__)
+#define log_error_and_exit(msg, ...) 	std::fprintf(stderr, "[ERRO] " msg __VA_OPT__(,) __VA_ARGS__); std::exit(EXIT_FAILURE)
+#define log_error(msg, ...) 			std::fprintf(stderr, "[ERRO] " msg __VA_OPT__(,) __VA_ARGS__)
+#define log_info(msg, ...) 				std::fprintf(stdout, "[INFO] " msg __VA_OPT__(,) __VA_ARGS__)
 
 #endif // LOGGER_H
