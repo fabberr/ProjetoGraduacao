@@ -17,7 +17,7 @@ namespace fs = std::filesystem; // filesystem namespace alias
 // libc
 #include <cstddef> 	// std::size_t
 #include <cstring> 	// strncpm
-#include <cstdint> 	// uint_t
+#include <cstdint> 	// fixed width integer types and C numeric limits
 
 // OpenCV
 #include <opencv2/core.hpp>
@@ -59,7 +59,7 @@ sfmPointCloud::sfmPointCloud(const ctrl::args& args) :
 			inline bool operator()(const char* a, const char* b) const noexcept { return std::strcmp(a, b) == 0; }
 		};
 
-		// inserindo arquivos de imagem no vetor
+		// inserindo caminhos até os arquivos de imagem no vetor
 		typedef std::unordered_set<const char*, cstr_hash, cstr_equal_to> whitelist_t;
 		const whitelist_t ext_whitelist{ ".png", ".jpg", ".tiff", ".webp" };
 		for (const auto& entry : fs::directory_iterator(_args.input_path)) {
@@ -67,14 +67,16 @@ sfmPointCloud::sfmPointCloud(const ctrl::args& args) :
 			std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 			auto ext_lower = ext.c_str();
 			if (ext_whitelist.find(ext_lower) != ext_whitelist.end()) {
-				_images.emplace_back(entry.path().c_str());
+				// garante que o caminho seja absoluto
+				const auto path = (entry.path().has_root_path()) ? entry.path() : fs::current_path()/entry.path();
+				_images.emplace_back(path.c_str());
 			}
 		}
 
 		return _images.size(); // 0 == false
 	}();
 	if (!load_success) {
-		log_error_and_exit("sfmPointCloud::sfmPointCloud: Nao foi possivel carregar imagens\n");
+		log_error_and_exit("sfmPointCloud::sfmPointCloud: Não foi possível carregar imagens\n");
 	}
 
 	// construir K
@@ -86,16 +88,29 @@ sfmPointCloud::sfmPointCloud(const ctrl::args& args) :
 
 #if defined(_DEBUG) || defined(DEBUG)
 // debug build
+
+	const auto print_paths = [](std::ostream& os, const std::vector<cv::String>& rhs){
+		for (const auto& p : rhs) {
+			os << p << '\n';
+		}
+	};
+
 	std::cout << 
 		"Objeto sfmPointCloud instanciado:\n" 
-		"    Imagens carregadas: " << _images.size() << "\n" 
-		"    _K (inicial):\n" << _K << "\n"
+		"    Imagens carregadas: " << _images.size()
+	<< std::endl;
+	for (const auto& path : _images) {
+		std::cout << "      >`" << path << "`\n";
+	}
+	std::cout << 
+		"    _K (inicial):\n" 
+		<< _K << '\n' 
 	<< std::endl;
 #endif
 }
 
 /** Destrutor (noop) */
-sfmPointCloud::~sfmPointCloud() { }
+sfmPointCloud::~sfmPointCloud() { return; }
 
 /********** Implementação Funções Membro Públicas **********/
 
@@ -107,38 +122,40 @@ void sfmPointCloud::compute_sparse() {
 	std::vector<cv::Mat> points3d_est; 		// pontos 3d estimados
 	cv::sfm::reconstruct(_images, Rs_est, ts_est, _K, points3d_est, true);
 
-	std::cout << "\n"
-		"Pontos 3D estimados: "  << points3d_est.size() << "\n" 
-		"Cameras estimadas: " << Rs_est.size() << "\n" 
-		"Valores intrinsecos refinados:\n" << _K << "\n" 
+	std::cout << "\n" 
+	    "Cena reconstruída:\n" 
+		"    Pontos estimados: "  << points3d_est.size() << "\n" 
+		"    Poses estimadas: " << Rs_est.size() << "\n" 
+		"    Valores intrínsecos refinados:\n" << _K << "\n" 
 	<< std::endl;
 
 	// extrair nuvem de pontos
-	std::cout << "Recuperando nuvem de pontos (esparsa)...";
+	std::cout << "Recuperando nuvem de pontos...";
 	_point_cloud.reserve(points3d_est.size());
 	for (const auto& pt : points3d_est) {
 		_point_cloud.emplace_back(pt);
 	}
 	points3d_est.clear();
-	std::cout << "ok\n";
+	std::cout << "OK\n";
 
 	// construir Rt p/ cada câmera
-	std::cout << "Recuperando valores extrinsecos [R|t] (pose)...";
+	std::cout << "Recuperando valores extrínsecos [R|t] (pose)...";
 	for (size_t i = 0; i < Rs_est.size(); ++i) {
 		_Rts.emplace_back(Rs_est[i], ts_est[i]);
 	}
 	Rs_est.clear();
 	ts_est.clear();
-	std::cout << "ok\n";
+	std::cout << "OK\n";
 
 	// exporta nuvem de pontos e pose das câmeras
+	std::cout << "Exportando resultados:\n";
 	export_results();
 }
 
 /********** Implementação Funções Membro Privadas **********/
 
 /** Exporta a nuvem de pontos como um arquivo .obj (apens lista de vértices) e as poses estimadas de cada câmera como um arquivo .sfm. */
-void sfmPointCloud::export_results() const {
+void sfmPointCloud::export_results(const char* obj_filename, const char* sfm_filename) const {
 
 	/**
 	 * Helper function: determina o caminho final de saída e verifica se ele existe,
@@ -149,19 +166,19 @@ void sfmPointCloud::export_results() const {
 	*/
 	const auto validate_output_dir = [this]{
 		// determinando nome do dataset
-		fs::path dataset_name = (_args.input_path.has_filename() ? // verifica se `input_path` termina em `/` (empty filename)
-			_args.input_path.filename() : 								// use nome do diretório .
-			_args.input_path.parent_path().filename() 					// use nome do diretório ..
+		fs::path dataset_name = (_args.input_path.has_filename() ? // verifica se `input_path` tem componente filename (não termina em `/` ou `\`)
+			_args.input_path.filename() : 								// se sim, use nome do diretório atual
+			_args.input_path.parent_path().filename() 					// senão, use nome do diretório pai
 		);
 		fs::path out_dir = _args.output_path/dataset_name; // caminho final
 		
-		// verifica se o diretório de saída existe, tenta criá-lo caso contrário
+		// tenta criar o diretório de saída caso ele não exista
 		if (!fs::exists(out_dir)) {
 			std::error_code ec;
 			if (!fs::create_directories(out_dir, ec)) {
 				// failure state
 				log_error(
-					"sfmPointCloud::export_results: Nao foi possivel criar diretorio de saida `%s`\n"
+					"sfmPointCloud::export_results: Não foi possível criar diretório de saída `%s`\n"
 					"\t%s\n", 
 					out_dir.c_str(), 
 					ec.message().c_str()
@@ -215,15 +232,16 @@ void sfmPointCloud::export_results() const {
 		if (std::ofstream file{filename}; file.is_open()) { // cria/recria arquivo ("w" mode)
 			write_fn(file);
 			file.close();
+			std::cout << "    Exportado: `" << filename.c_str() << "`\n";
 		} else {
-			log_error("Nao foi possivel abrir arquivo de saida `%s`\n", filename.c_str());
+			log_error("Não foi possível abrir arquivo de saída `%s`\n", filename.c_str());
 		}
 	};
 
 	if (const auto& [path_exists, out_dir] = validate_output_dir(); path_exists) {
-		export_to(out_dir/"point_cloud.obj", write_cloud);
-		export_to(out_dir/"pose.sfm", write_pose);
+		export_to(out_dir/obj_filename, write_cloud);
+		export_to(out_dir/sfm_filename, write_pose);
 	} else {
-		log_info("Impossivel exportar resultados\n");
+		log_error("Impossível exportar resultados\n");
 	}
 }

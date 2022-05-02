@@ -24,15 +24,15 @@ struct args {
 	static const int MIN_ARGS 			= 5; 	/** Número mínimo de argumentos. Também representa o índice do primeiro argumento subsequente aos obrigatórios. */
 
 	// caminhos de entrada e saída
-	fs::path input_path{}; 				/* Caminho até o diretório de entrada contendo as imagens do dataset. */
-	fs::path output_path{"./output"}; 	/* Caminho até o diretório de saída. */
+	fs::path input_path{}; 				/* Caminho até o diretório de entrada que contém as imagens do dataset. */
+	fs::path output_path{"./output"}; 	/* Caminho até o diretório de saída onde os resultados serão exportados para. */
 
 	// Parâmetros intrínsecos da câmera
 	float f{}; 			/** Distância focal da câmera. */
-	float cx{}, cy{};	/** Offset do ponto principal (x, v) da câmera. */
+	float cx{}, cy{};	/** Offset do ponto principal (x, y) da câmera. */
 };
 
-// funções (declaração)
+/********** Funções (declaração) **********/
 
 void help(std::ostream& os = std::cout);
 args parse(const int argc, const char* const* argv);

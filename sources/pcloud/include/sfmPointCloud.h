@@ -49,7 +49,7 @@ public:
 private:
 	/********** Funções Membro Privadas **********/
 
-	void export_results() const;
+	void export_results(const char* obj_filename = "point_cloud.obj", const char* sfm_filename = "pose.sfm") const;
 };
 
 #endif // SFM_POINT_CLOUD_H

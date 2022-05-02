@@ -16,7 +16,7 @@ namespace fs = std::filesystem; // filesystem namespace alias
 
 /********** Macros **********/
 
-// macros para acesso à índices específicos da lista de argumentos
+// macros para acesso à strings específicas da lista de argumentos
 #define ARG_INPUT_PATH 		argv[ctrl::args::INPUT_PATH_IDX]
 #define ARG_FOCAL_LENGTH 	argv[ctrl::args::FOCAL_LENGTH_IDX]
 #define ARG_CX 				argv[ctrl::args::PRINCIPAL_X_IDX]
@@ -32,24 +32,25 @@ void ctrl::help(std::ostream& os) {
 	os << 
 		"Uso: ./pcloud <input_path> <f> <cx> <cy> [OPTIONS]\n" 
 		"    Computa uma nuvem de pontos esparsa para um conjunto de imagens.\n" 
-		"    Ao final da execucao, dois arquivos serao gerados: um arquivo .obj contendo\n" 
-		"    apenas a lista de vertices, representando a nuvem de pontos, e um arquivo\n" 
-		"    .sfm detalhando a pose (matriz de transformacao Rt) estimada para cada\n" 
-		"    camera.\n" 
+		"    Ao final da execução, dois arquivos serão gerados: um arquivo .obj contendo\n" 
+		"    apenas a lista de vértices, representando a nuvem de pontos; e um arquivo\n" 
+		"    .sfm detalhando a pose (matriz de transformação Rt) estimada para cada\n" 
+		"    câmera.\n" 
 		"\n" 
 		"<input_path>:\n" 
-		"    Caminho ate o diretorio contendo as imagens do dataset.\n"
+		"    Caminho ate o diretório contendo as imagens do dataset.\n"
 		"<f>:\n" 
-		"    Distancia Focal da camera, em pixels.\n" 
+		"    Distância Focal da câmera, em pixels.\n" 
 		"<cx> e <cy>:\n" 
-		"    Offsets X e Y do Ponto Principal da camera, em pixels.\n" 
+		"    Offsets X e Y do Ponto Principal da câmera, em pixels.\n" 
 		"\n" 
 		"OPTIONS:\n" 
 		"    --help, -h:\n" 
-		"        Exibe esta mensagem de ajuda e termina a execucao sem computar nada.\n" 
+		"        Exibe essa mensagem de ajuda e termina a execução do programa sem\n" 
+		"        computar nada.\n" 
 		"    -o <output_path>:\n" 
-		"        Caminho ate o diretorio onde serao armazenados os resultados. Se nenhum\n" 
-		"        caminho for fornecido, por padrao sera definido como `$PWD/output/`.\n" 
+		"        Caminho ate o diretório onde serão armazenados os resultados. Se nenhum\n" 
+		"        caminho for fornecido, por padrao será definido como `./output/`.\n" 
 	<< std::endl;
 }
 
@@ -60,9 +61,14 @@ void ctrl::help(std::ostream& os) {
  * Caso um erro de validação seja encontrado, o programa termina a execução com 
  * código de status `EXIT_FAILURE`.
  * 
- * Caso o argumento opcional `--help` esteja presente ou argumentos obrigatórios 
- * insuficientes foram passados, o programa simplesmente exibe a mensagem de 
- * ajuda e termina a execução com código de status `EXIT_SUCCESS`.
+ * Caso o argumento opcional `--help` esteja presente ou se o número de 
+ * argumentos obrigatórios for menor que o mínimo, o programa simplesmente exibe
+ * a mensagem de ajuda e termina a execução com código de status `EXIT_SUCCESS`.
+ * 
+ * @param argc Número de argumentos da linha de comando.
+ * @param argv Lista de argumentos.
+ * 
+ * @returns Um objeto ctrl::args que contém os argumentos extraídos.
 */
 ctrl::args ctrl::parse(const int argc, const char* const* argv) {
 
@@ -76,17 +82,17 @@ ctrl::args ctrl::parse(const int argc, const char* const* argv) {
 
 	// extraindo e validando argumento obrigatório <input_path>
 	if (extracted.input_path = ARG_INPUT_PATH; !fs::exists(extracted.input_path) || !fs::is_directory(extracted.input_path)) {
-		log_error_and_exit("Diretorio de entrada `%s` nao existe ou nao e valido\n", ARG_INPUT_PATH);
+		log_error_and_exit("Diretório de entrada `%s` não existe ou não é um caminho vállido\n", ARG_INPUT_PATH);
 	}
 
 	// extraindo e validando argumento obrigatório <f>
 	if (extracted.f = std::strtof(ARG_FOCAL_LENGTH, nullptr); extracted.f == 0) {
-		log_error_and_exit("Distancia focal `%s` e invalida\n", ARG_FOCAL_LENGTH);
+		log_error_and_exit("Distância focal `%s` inváldia\n", ARG_FOCAL_LENGTH);
 	}
 
 	// extraindo e validando argumentos obrigatórios <cx> e <cy>
 	if (extracted.cx = std::strtof(ARG_CX, nullptr), extracted.cy = std::strtof(ARG_CY, nullptr); extracted.cx == 0 || extracted.cy == 0) {
-		log_error_and_exit("Ponto principal (%s, %s) e invalido\n", ARG_CX, ARG_CY);
+		log_error_and_exit("Ponto principal (%s, %s) inválido\n", ARG_CX, ARG_CY);
 	}
 
 	// verificando e extraindo argumentos opcionais, se existirem
@@ -106,15 +112,13 @@ ctrl::args ctrl::parse(const int argc, const char* const* argv) {
 				 * ocasionar um erro de execução.
 				*/
 				extracted.output_path = current_arg;
-				log_info("Usando `%s` como caminho de saida\n", extracted.output_path.c_str());
+				log_info("Usando `%s` como caminho de saída\n\n", extracted.output_path.c_str());
 			} else {
 				extracted.output_path = "./output/";
-				log_info("Nenhum valor passado para a opcao `-o`, usando `%s` como caminho de saida\n", extracted.output_path.c_str());
+				log_info("Nenhum valor passado à opção `-o`, usando `%s` como caminho de saída\n\n", extracted.output_path.c_str());
 			}
 		}
 	}
 
 	return extracted;
 }
-
-/** @todo Adicionar acentuação às mensagens. */
