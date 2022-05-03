@@ -3,9 +3,10 @@
 // libc++
 #include <iostream> 		// i/o streams
 #include <fstream> 			// std::ofstream
-#include <algorithm> 		// std::count_if, std::transform
+#include <algorithm> 		// std::count_if, std::transform, std::sort
 #include <functional> 		// std::hash
 #include <string_view> 		// std::string_view
+#include <set> 				// std::set
 #include <unordered_set> 	// std::unordered_set
 #include <system_error> 	// std::error_code
 #include <utility> 			// std::make_pair
@@ -73,6 +74,9 @@ sfmPointCloud::sfmPointCloud(const ctrl::args& args) :
 			}
 		}
 
+		// ordenar por ordem alfabética
+		std::sort(_images.begin(), _images.end());
+
 		return _images.size(); // 0 == false
 	}();
 	if (!load_success) {
@@ -89,18 +93,12 @@ sfmPointCloud::sfmPointCloud(const ctrl::args& args) :
 #if defined(_DEBUG) || defined(DEBUG)
 // debug build
 
-	const auto print_paths = [](std::ostream& os, const std::vector<cv::String>& rhs){
-		for (const auto& p : rhs) {
-			os << p << '\n';
-		}
-	};
-
 	std::cout << 
 		"Objeto sfmPointCloud instanciado:\n" 
 		"    Imagens carregadas: " << _images.size()
 	<< std::endl;
 	for (const auto& path : _images) {
-		std::cout << "      >`" << path << "`\n";
+		std::cout << "        >`" << path << "`\n";
 	}
 	std::cout << 
 		"    _K (inicial):\n" 
@@ -117,39 +115,77 @@ sfmPointCloud::~sfmPointCloud() { return; }
 /** Computa a nuvem de pontos esparsa e esporta os resultados. */
 void sfmPointCloud::compute_sparse() {
 
-	// reconstruir a cena
-	std::vector<cv::Mat> Rs_est, ts_est; 	// matrizes de rotação e vetores de translação estimados p/ cada câmera
-	std::vector<cv::Mat> points3d_est; 		// pontos 3d estimados
-	cv::sfm::reconstruct(_images, Rs_est, ts_est, _K, points3d_est, true);
+	/**
+	 * Helper function: computa uma nuvem de pontos parcial, usando apenas uma parte
+	 * do dataset (recomendado: janela de 3-4 imagens).
+	 *
+	 * @param bot Limite inferiror da janela.
+	 * @param top Limite superior da janela.
+	
+	*/
+	const auto compute_partial = [this](std::size_t bot, std::size_t top) {
+		
+		// copiando caminhos
+		std::cout << "\nbot:" << bot << '\n';
+		std::cout << "top:" << top << '\n';
+		std::vector<cv::String> images{};
+		if (top == bot + 4) {
+			// hasn't wrapped around yet
+			images.reserve(top - bot);
+			images.assign(&this->_images[bot], &this->_images[top]);
+		} else {
+			// wrapped around
+			std::cout << "todo\n";
+		}
+		for (const auto& path : images) {
+			std::cout << path << '\n';
+		}
 
-	std::cout << "\n" 
-	    "Cena reconstruída:\n" 
-		"    Pontos estimados: "  << points3d_est.size() << "\n" 
-		"    Poses estimadas: " << Rs_est.size() << "\n" 
-		"    Valores intrínsecos refinados:\n" << _K << "\n" 
-	<< std::endl;
+		// // reconstruir a cena
+		// std::vector<cv::Mat> Rs_est, ts_est; 	// matrizes de rotação e vetores de translação estimados p/ cada câmera
+		// std::vector<cv::Mat> points3d_est; 		// pontos 3d estimados
+		// cv::sfm::reconstruct(images, Rs_est, ts_est, this->_K, points3d_est, true);
 
-	// extrair nuvem de pontos
-	std::cout << "Recuperando nuvem de pontos...";
-	_point_cloud.reserve(points3d_est.size());
-	for (const auto& pt : points3d_est) {
-		_point_cloud.emplace_back(pt);
+		// std::cout << 
+		// 	"\n" 
+		// 	"Cena reconstruída:\n" 
+		// 	"    Pontos estimados: "  << points3d_est.size() << "\n" 
+		// 	"    Poses estimadas: " << Rs_est.size() << "\n" 
+		// 	"    Valores intrínsecos refinados:\n" << this->_K << "\n" 
+		// << std::endl;
+
+		// // extrair nuvem de pontos
+		// std::cout << "Recuperando nuvem de pontos...";
+		// this->_point_cloud.reserve(points3d_est.size());
+		// for (const auto& pt : points3d_est) {
+		// 	this->_point_cloud.emplace_back(pt);
+		// }
+		// points3d_est.clear();
+		// std::cout << "OK\n";
+
+		// // construir Rt p/ cada câmera
+		// std::cout << "Recuperando valores extrínsecos [R|t] (pose)...";
+		// for (size_t i = 0; i < Rs_est.size(); ++i) {
+		// 	this->_Rts.emplace_back(Rs_est[i], ts_est[i]);
+		// }
+		// Rs_est.clear();
+		// ts_est.clear();
+		// std::cout << "OK\n";
+
+		// // exporta nuvem de pontos e pose das câmeras
+		// std::cout << "Exportando resultados:\n";
+		// export_results();
+	};
+
+	// computa todas as nuvens de pontos parciais
+	const int SLIDING_WINDOW_SIZE = 4; 								// tamanho da janela deslizante
+	const int SLIDING_WINDOW_INCREMENT = SLIDING_WINDOW_SIZE - 1; 	// quantidade de índices a incrementar a cada iteração
+	std::size_t bot = 0, top = SLIDING_WINDOW_SIZE; 				// limites inferior e superior da janela
+	while (bot < _images.size()) {
+		compute_partial(bot, top);
+		bot += SLIDING_WINDOW_INCREMENT;
+		top = (top + SLIDING_WINDOW_INCREMENT) % _images.size();
 	}
-	points3d_est.clear();
-	std::cout << "OK\n";
-
-	// construir Rt p/ cada câmera
-	std::cout << "Recuperando valores extrínsecos [R|t] (pose)...";
-	for (size_t i = 0; i < Rs_est.size(); ++i) {
-		_Rts.emplace_back(Rs_est[i], ts_est[i]);
-	}
-	Rs_est.clear();
-	ts_est.clear();
-	std::cout << "OK\n";
-
-	// exporta nuvem de pontos e pose das câmeras
-	std::cout << "Exportando resultados:\n";
-	export_results();
 }
 
 /********** Implementação Funções Membro Privadas **********/
