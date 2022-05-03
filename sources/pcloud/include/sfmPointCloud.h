@@ -30,6 +30,7 @@ private:
 	cv::Mat 					_K; 			/** Matriz intrínseca K estimada. Inicialmente derivada dos argumentos <f>, <cx> e <cy>. */
 	std::vector<cv::Affine3d> 	_Rts; 			/** Matrizes extrínsecas Rt estimadas para cada câmera. */
 	std::vector<cv::Vec3f> 		_point_cloud; 	/** Nuvem de pontos esparsa. */
+	fs::path 					_output_dir; 	/** Caminho até o diretório de saída final (com nome do dataset). */
 
 public:
 	/********** Construtores & Destrutor **********/
@@ -49,7 +50,7 @@ public:
 private:
 	/********** Funções Membro Privadas **********/
 
-	void export_results(const char* obj_filename = "point_cloud.obj", const char* sfm_filename = "pose.sfm") const;
+	void export_results(bool cloud_only = false, const char* obj_filename = "point_cloud.obj", const char* sfm_filename = "pose.sfm");
 };
 
 #endif // SFM_POINT_CLOUD_H
