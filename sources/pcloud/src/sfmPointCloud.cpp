@@ -6,7 +6,6 @@
 #include <algorithm> 		// std::count_if, std::transform, std::sort
 #include <functional> 		// std::hash
 #include <string_view> 		// std::string_view
-#include <set> 				// std::set
 #include <unordered_set> 	// std::unordered_set
 #include <system_error> 	// std::error_code
 #include <utility> 			// std::make_pair
@@ -43,7 +42,7 @@ sfmPointCloud::sfmPointCloud(const ctrl::args& args) :
 	_point_cloud()
 {
 	// executa uma função anônima que popula o vetor `_images` e retorna false se falhou
-	bool load_success = [this]{
+	bool load_success = [this] {
 		// reservando espaço para o vetor `_images`, contando apenas arquivos regulares
 		bool (*pred)(const fs::path&) = fs::is_regular_file;
 		const size_t count = std::count_if(fs::directory_iterator(_args.input_path), fs::directory_iterator{}, pred); // begin, end, predicate
@@ -91,8 +90,7 @@ sfmPointCloud::sfmPointCloud(const ctrl::args& args) :
 	);
 
 #if defined(_DEBUG) || defined(DEBUG)
-// debug build
-
+	// debug build
 	std::cout << 
 		"Objeto sfmPointCloud instanciado:\n" 
 		"    Imagens carregadas: " << _images.size()
@@ -112,53 +110,51 @@ sfmPointCloud::~sfmPointCloud() { return; }
 
 /********** Implementação Funções Membro Públicas **********/
 
-/** Computa a nuvem de pontos esparsa e esporta os resultados. */
+/** Computa a nuvem de pontos esparsa e exporta os resultados. */
 void sfmPointCloud::compute_sparse() {
 
 	/**
 	 * Helper function: computa uma nuvem de pontos parcial, usando apenas uma parte
 	 * do dataset (recomendado: janela de 3-4 imagens).
 	 *
-	 * @param bot Limite inferiror da janela.
-	 * @param top Limite superior da janela.
-	
+	 * @param lower Limite inferior da janela.
+	 * @param upper Limite superior da janela.
+	 * @param size Tamanho da janela.
 	*/
-	const auto compute_partial = [this](std::size_t bot, std::size_t top) {
+	const auto compute_partial = [this](std::size_t lower, std::size_t upper, std::uint8_t size) {
 		
-		// copiando caminhos
-		std::cout << "\nbot:" << bot << '\n';
-		std::cout << "top:" << top << '\n';
+		// criando dataset parcial
 		std::vector<cv::String> images{};
-		if (top == bot + 4) {
-			// hasn't wrapped around yet
-			images.reserve(top - bot);
-			images.assign(&this->_images[bot], &this->_images[top]);
+		images.reserve(size);
+		if (upper > lower) {
+			images.assign(&_images[lower], &_images[upper]); // range: [lower, upper)
 		} else {
-			// wrapped around
-			std::cout << "todo\n";
+			images.insert(images.end(), &_images[lower], &_images[_images.size()]); // lower half range: [lower, END)
+			images.insert(images.end(), &_images[0], &_images[upper]); 				// upper half range: [BEGIN, upper)
 		}
 		for (const auto& path : images) {
 			std::cout << path << '\n';
 		}
+		std::cout << '\n';
 
 		// // reconstruir a cena
 		// std::vector<cv::Mat> Rs_est, ts_est; 	// matrizes de rotação e vetores de translação estimados p/ cada câmera
 		// std::vector<cv::Mat> points3d_est; 		// pontos 3d estimados
-		// cv::sfm::reconstruct(images, Rs_est, ts_est, this->_K, points3d_est, true);
+		// cv::sfm::reconstruct(images, Rs_est, ts_est, _K, points3d_est, true);
 
 		// std::cout << 
 		// 	"\n" 
 		// 	"Cena reconstruída:\n" 
 		// 	"    Pontos estimados: "  << points3d_est.size() << "\n" 
 		// 	"    Poses estimadas: " << Rs_est.size() << "\n" 
-		// 	"    Valores intrínsecos refinados:\n" << this->_K << "\n" 
+		// 	"    Valores intrínsecos refinados:\n" << _K << "\n" 
 		// << std::endl;
 
 		// // extrair nuvem de pontos
 		// std::cout << "Recuperando nuvem de pontos...";
-		// this->_point_cloud.reserve(points3d_est.size());
+		// _point_cloud.reserve(points3d_est.size());
 		// for (const auto& pt : points3d_est) {
-		// 	this->_point_cloud.emplace_back(pt);
+		// 	_point_cloud.emplace_back(pt);
 		// }
 		// points3d_est.clear();
 		// std::cout << "OK\n";
@@ -166,7 +162,7 @@ void sfmPointCloud::compute_sparse() {
 		// // construir Rt p/ cada câmera
 		// std::cout << "Recuperando valores extrínsecos [R|t] (pose)...";
 		// for (size_t i = 0; i < Rs_est.size(); ++i) {
-		// 	this->_Rts.emplace_back(Rs_est[i], ts_est[i]);
+		// 	_Rts.emplace_back(Rs_est[i], ts_est[i]);
 		// }
 		// Rs_est.clear();
 		// ts_est.clear();
@@ -177,14 +173,18 @@ void sfmPointCloud::compute_sparse() {
 		// export_results();
 	};
 
-	// computa todas as nuvens de pontos parciais
-	const int SLIDING_WINDOW_SIZE = 4; 								// tamanho da janela deslizante
-	const int SLIDING_WINDOW_INCREMENT = SLIDING_WINDOW_SIZE - 1; 	// quantidade de índices a incrementar a cada iteração
-	std::size_t bot = 0, top = SLIDING_WINDOW_SIZE; 				// limites inferior e superior da janela
-	while (bot < _images.size()) {
-		compute_partial(bot, top);
-		bot += SLIDING_WINDOW_INCREMENT;
-		top = (top + SLIDING_WINDOW_INCREMENT) % _images.size();
+	// iterando sobre o vetor de caminhos `_images` usando um algoritmo janela deslizante circular com interseção
+	const std::uint8_t SLIDING_WINDOW_SIZE 			= 4; 	// tamanho do segmento
+	const std::uint8_t SLIDING_WINDOW_INTERSECTION 	= 1; 	// quantidade de elementos na interseção entre o segmento atual e o anterior
+	const std::uint8_t SLIDING_WINDOW_INCREMENT 	= 
+		SLIDING_WINDOW_SIZE - SLIDING_WINDOW_INTERSECTION; 	// quantidade de índices a incrementar a cada iteração
+	std::size_t lower = 0, upper = SLIDING_WINDOW_SIZE; 	// limites inferior e superior da janela
+	while (lower < _images.size()) {
+
+		compute_partial(lower, upper, SLIDING_WINDOW_SIZE);
+
+		lower += SLIDING_WINDOW_INCREMENT;
+		upper = (upper + SLIDING_WINDOW_INCREMENT) % _images.size();
 	}
 }
 
@@ -194,13 +194,13 @@ void sfmPointCloud::compute_sparse() {
 void sfmPointCloud::export_results(const char* obj_filename, const char* sfm_filename) const {
 
 	/**
-	 * Helper function: determina o caminho final de saída e verifica se ele existe,
-	 * tenta criá-lo caso contrário.
+	 * Helper function: determina o caminho de saída final e tenta criá-lo caso ele 
+	 * não exista.
 	 * 
 	 * @returns Um std::pair contendo `true` e o caminho até o diretório de saída 
 	 * validado ou `false` e um caminho vazio caso falhe em criar o diretório.
 	*/
-	const auto validate_output_dir = [this]{
+	const auto validate_output_dir = [this] {
 		// determinando nome do dataset
 		fs::path dataset_name = (_args.input_path.has_filename() ? // verifica se `input_path` tem componente filename (não termina em `/` ou `\`)
 			_args.input_path.filename() : 								// se sim, use nome do diretório atual
@@ -226,7 +226,7 @@ void sfmPointCloud::export_results(const char* obj_filename, const char* sfm_fil
 	};
 
 	/** Helper function: exporta a nuvem de pontos para uma stream de arquivo aberta. */
-	const auto write_cloud = [&cloud = _point_cloud](std::ofstream& file){
+	const auto write_cloud = [&cloud = _point_cloud](std::ofstream& file) {
 		// lista de vértices, formato: "v <x> <y> <z>\n"
 		for (const auto& pt : cloud) {
 			file << "v " << pt[0] << ' ' << pt[1] << ' ' << pt[2] << '\n';
@@ -234,7 +234,7 @@ void sfmPointCloud::export_results(const char* obj_filename, const char* sfm_fil
 	};
 
 	/** Helper function: exporta a pose das câmeras para uma stream de arquivo aberta. */
-	const auto write_pose = [&paths = _images, &Rts = _Rts](std::ofstream& file){
+	const auto write_pose = [&paths = _images, &Rts = _Rts](std::ofstream& file) {
 		// número de câmeras
 		file << paths.size() << "\n\n";
 
@@ -264,7 +264,7 @@ void sfmPointCloud::export_results(const char* obj_filename, const char* sfm_fil
 	};
 
 	/** Helper function: abre o arquivo de saída `filename` e escreve seus conteúdos de acordo com a função `write_fn` */
-	const auto export_to = [](const fs::path& filename, const std::function<void(std::ofstream&)>& write_fn){
+	const auto export_to = [](const fs::path& filename, const std::function<void(std::ofstream&)>& write_fn) {
 		if (std::ofstream file{filename}; file.is_open()) { // cria/recria arquivo ("w" mode)
 			write_fn(file);
 			file.close();
@@ -281,3 +281,6 @@ void sfmPointCloud::export_results(const char* obj_filename, const char* sfm_fil
 		log_error("Impossível exportar resultados\n");
 	}
 }
+
+/** @todo modificar nome do arquivo das numvens de pontos parciais ao exportar resultados */
+/** @todo concatenar nuvens de pontos e exportar arquivos finais */
