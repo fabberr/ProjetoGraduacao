@@ -204,7 +204,8 @@ void sfmPointCloud::compute_sparse() {
 		// lista de vértices, formato: "v <x> <y> <z>\n"
 		for (const auto& entry : fs::directory_iterator(_output_dir)) {
 			if (std::strncmp(entry.path().extension().c_str(), ".obj", 4) == 0) {
-				io::import_from_file(entry.path(), sfmPointCloud::read_cloud);
+				using namespace std::placeholders;
+				io::import_from_file(entry.path(), std::bind(&sfmPointCloud::read_cloud, this, _1));
 			}
 		}
 	} else {
@@ -315,9 +316,11 @@ void sfmPointCloud::export_results(bool cloud_only, const char* obj_filename, co
 	// tenta exportar os resultados
 	if (const auto& [path_exists, out_dir] = validate_output_dir(); path_exists) {
 		_output_dir = out_dir;
-		io::export_to_file(out_dir/obj_filename, sfmPointCloud::write_cloud);
+		
+		using namespace std::placeholders;
+		io::export_to_file(out_dir/obj_filename, std::bind(&sfmPointCloud::write_cloud, this, _1));
 		if (!cloud_only) {
-			io::export_to_file(out_dir/sfm_filename, sfmPointCloud::write_pose);
+			io::export_to_file(out_dir/sfm_filename, std::bind(&sfmPointCloud::write_pose, this, _1));
 		}
 		std::cout << std::endl;
 	} else {
