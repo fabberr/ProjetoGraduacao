@@ -4,6 +4,7 @@
 /********** Headers **********/
 
 // libc++
+#include <fstream>
 #include <vector>
 #include <string>
 #include <filesystem>
@@ -50,6 +51,9 @@ public:
 private:
 	/********** Funções Membro Privadas **********/
 
+	bool read_cloud(std::ifstream& file);
+	bool write_cloud(std::ofstream& file);
+	bool write_pose(std::ofstream& file);
 	void export_results(bool cloud_only = false, const char* obj_filename = "point_cloud.obj", const char* sfm_filename = "pose.sfm");
 };
 

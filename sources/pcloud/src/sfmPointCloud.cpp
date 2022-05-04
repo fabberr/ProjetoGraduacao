@@ -10,7 +10,6 @@
 #include <unordered_set> 	// std::unordered_set
 #include <system_error> 	// std::error_code
 #include <utility> 			// std::make_pair
-#include <functional> 		// function objects support
 #include <filesystem> 		// filesystem utilities
 
 namespace fs = std::filesystem; // filesystem namespace alias
@@ -27,6 +26,7 @@ namespace fs = std::filesystem; // filesystem namespace alias
 // internos
 #include <sfmPointCloud.h>
 #include <logger.h>
+#include <io.h>
 
 /********** Implementação Construtores & Destrutor **********/
 
@@ -60,16 +60,20 @@ sfmPointCloud::sfmPointCloud(const ctrl::args& args) :
 			inline bool operator()(const char* a, const char* b) const noexcept { return std::strcmp(a, b) == 0; }
 		};
 
-		// inserindo caminhos até os arquivos de imagem no vetor
+		// extensões de arquivo permitidas
 		typedef std::unordered_set<const char*, cstr_hash, cstr_equal_to> whitelist_t;
 		const whitelist_t ext_whitelist{ ".png", ".jpg", ".tiff", ".webp" };
+
+		// inserindo caminhos até os arquivos de imagem no vetor
 		for (const auto& entry : fs::directory_iterator(_args.input_path)) {
+			// filtrandoa penas extensões permitidas
 			auto ext = entry.path().extension().native();
 			std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 			auto ext_lower = ext.c_str();
+			
 			if (ext_whitelist.find(ext_lower) != ext_whitelist.end()) {
 				// garante que o caminho seja absoluto
-				const auto path = (entry.path().has_root_path()) ? entry.path() : fs::current_path()/entry.path();
+				const auto path = (entry.path().is_absolute()) ? entry.path() : fs::absolute(entry.path());
 				_images.emplace_back(path.c_str());
 			}
 		}
@@ -115,43 +119,6 @@ sfmPointCloud::~sfmPointCloud() { return; }
 
 /** Computa a nuvem de pontos esparsa e exporta os resultados. */
 void sfmPointCloud::compute_sparse() {
-
-	const auto compute_full = [this]() {
-		
-		// reconstruir a cena
-		std::vector<cv::Mat> Rs_est, ts_est; 	// matrizes de rotação e vetores de translação estimados p/ cada câmera
-		std::vector<cv::Mat> points3d_est; 		// pontos 3d estimados
-		cv::sfm::reconstruct(_images, Rs_est, ts_est, _K, points3d_est, true);
-
-		std::cout << "\n" 
-			"Cena reconstruída:\n" 
-			"    Pontos estimados: "  << points3d_est.size() << "\n" 
-			"    Poses estimadas: " << Rs_est.size() << "\n" 
-			"    Valores intrínsecos refinados:\n" << _K << "\n" 
-		<< std::endl;
-
-		// extrair nuvem de pontos
-		std::cout << "Recuperando nuvem de pontos...";
-		_point_cloud.reserve(points3d_est.size());
-		for (const auto& pt : points3d_est) {
-			_point_cloud.emplace_back(pt);
-		}
-		points3d_est.clear();
-		std::cout << "OK\n";
-
-		// construir Rt p/ cada câmera
-		std::cout << "Recuperando valores extrínsecos [R|t] (pose)...";
-		for (size_t i = 0; i < Rs_est.size(); ++i) {
-			_Rts.emplace_back(Rs_est[i], ts_est[i]);
-		}
-		Rs_est.clear();
-		ts_est.clear();
-		std::cout << "OK\n";
-
-		// exporta nuvem de pontos e pose das câmeras
-		std::cout << "Exportando resultados:\n";
-		export_results();
-	};
 
 	/**
 	 * Helper function: computa uma nuvem de pontos parcial, usando apenas uma parte
@@ -216,16 +183,6 @@ void sfmPointCloud::compute_sparse() {
 		export_results(true, std::string{"partial_cloud_0" + std::to_string(lower + 1) + ".obj"}.c_str());
 	};
 
-	/** Lê um arquivo .obj e adiciona seus vértices  em `cloud_acc`. */
-	const auto read_cloud = [](const fs::path& filename, std::vector<cv::Vec3f>& cloud_acc) {
-		if (std::ifstream file{filename}; file.is_open()) {
-			// ...
-			file.close();
-		} else {
-			log_error("Não foi possível abrir arquivo `%s`\n", filename.c_str());
-		}
-	};
-
 	// iterando sobre o vetor de caminhos `_images` usando um algoritmo janela deslizante circular com interseção
 	const std::uint8_t SLIDING_WINDOW_SIZE 			= 3; 	// tamanho do segmento
 	const std::uint8_t SLIDING_WINDOW_INTERSECTION 	= 2; 	// quantidade de elementos na interseção entre o segmento atual e o anterior
@@ -241,14 +198,75 @@ void sfmPointCloud::compute_sparse() {
 	}
 
 	// concatenar as nuvens de pontos
-	if (!_output_dir.empty()) {
+	if (fs::exists(_output_dir)) {
 		_point_cloud.clear();
+		
+		// lista de vértices, formato: "v <x> <y> <z>\n"
+		for (const auto& entry : fs::directory_iterator(_output_dir)) {
+			if (std::strncmp(entry.path().extension().c_str(), ".obj", 4) == 0) {
+				io::import_from_file(entry.path(), sfmPointCloud::read_cloud);
+			}
+		}
 	} else {
-		log_error_and_exit("");
+		log_error_and_exit("Diretório de saída `%s` não existe\n", _output_dir.c_str());
 	}
 }
 
 /********** Implementação Funções Membro Privadas **********/
+
+/** Importa a nuvem de pontos parcial para uma stream de arquivo aberta. */
+bool sfmPointCloud::read_cloud(std::ifstream& file) {
+	// lista de vértices, formato: "v <x> <y> <z>\n"
+	while (file) {
+		char v[1];
+		cv::Point3f pt{};
+		file >> v >> pt.x >> pt.y >> pt.z;
+
+		_point_cloud.emplace_back(pt.x, pt.y, pt.z);
+	}
+	return true;
+}
+
+/** Exporta a nuvem de pontos para uma stream de arquivo aberta. */
+bool sfmPointCloud::write_cloud(std::ofstream& file) {
+	// lista de vértices, formato: "v <x> <y> <z>\n"
+	for (const auto& pt : _point_cloud) {
+		file << "v " << pt[0] << ' ' << pt[1] << ' ' << pt[2] << '\n';
+	}
+	return true;
+}
+
+/** Helper function: exporta a pose das câmeras para uma stream de arquivo aberta. */
+bool sfmPointCloud::write_pose(std::ofstream& file) {
+	// número de câmeras
+	file << _images.size() << "\n\n";
+
+	// sfm string p/ cada câmera, formato: "<path> <cam_rotation> <cam_translation>\n"
+	for (std::size_t i = 0; i < _images.size(); ++i) {
+		// caminho absoluto até a imagem
+		file << _images[i] << ' ';
+
+		// componente R (matriz de rotação)
+		const auto& R = _Rts[i].rotation();
+		for (std::uint8_t j = 0; j < 3; ++j) {
+			for (std::uint8_t k = 0; k < 3; ++k) {
+				// [0][0] [0][1] [0][2] [1][0] [1][1] [1][2] [2][0] [2][1] [2][2] (primerias 3 linhas e colunas)
+				file << R(j, k) << ' ';
+			}
+		}
+
+		// componente t (vetor de translação)
+		const auto& t = _Rts[i].translation();
+		for (std::uint8_t j = 0; j < 3; ++j) {
+			// [0][3] [1][3] [2][3] (última coluna)
+			file << t[j] << ' ';
+		}
+
+		file << '\n';
+	}
+	return true;
+}
+
 
 /**
  * Exporta a nuvem de pontos como um arquivo .obj (apens lista de vértices) e as
@@ -294,61 +312,12 @@ void sfmPointCloud::export_results(bool cloud_only, const char* obj_filename, co
 		return std::make_pair(true, out_dir);
 	};
 
-	/** Helper function: exporta a nuvem de pontos para uma stream de arquivo aberta. */
-	const auto write_cloud = [&cloud = _point_cloud](std::ofstream& file) {
-		// lista de vértices, formato: "v <x> <y> <z>\n"
-		for (const auto& pt : cloud) {
-			file << "v " << pt[0] << ' ' << pt[1] << ' ' << pt[2] << '\n';
-		}
-	};
-
-	/** Helper function: exporta a pose das câmeras para uma stream de arquivo aberta. */
-	const auto write_pose = [&paths = _images, &Rts = _Rts](std::ofstream& file) {
-		// número de câmeras
-		file << paths.size() << "\n\n";
-
-		// sfm string p/ cada câmera, formato: "<path> <rotation> <translation>\n"
-		for (std::size_t i = 0; i < paths.size(); ++i) {
-			// caminho absoluto até a imagem
-			file << paths[i] << ' ';
-
-			// componente R (matriz de rotação)
-			const auto& R = Rts[i].rotation();
-			for (std::uint8_t j = 0; j < 3; ++j) {
-				for (std::uint8_t k = 0; k < 3; ++k) {
-					// [0][0] [0][1] [0][2] [1][0] [1][1] [1][2] [2][0] [2][1] [2][2] (primerias 3 linhas e colunas)
-					file << R(j, k) << ' ';
-				}
-			}
-
-			// componente t (vetor de translação)
-			const auto& t = Rts[i].translation();
-			for (std::uint8_t j = 0; j < 3; ++j) {
-				// [0][3] [1][3] [2][3] (última coluna)
-				file << t[j] << ' ';
-			}
-
-			file << '\n';
-		}
-	};
-
-	/** Helper function: abre o arquivo de saída `filename` e escreve seus conteúdos de acordo com a função `write_fn` */
-	const auto export_to = [](const fs::path& filename, const std::function<void(std::ofstream&)>& write_fn) {
-		if (std::ofstream file{filename}; file.is_open()) { // cria/recria arquivo ("w" mode)
-			write_fn(file);
-			file.close();
-			std::cout << "    Exportado: `" << filename.c_str() << "`\n";
-		} else {
-			log_error("Não foi possível abrir arquivo de saída `%s`\n", filename.c_str());
-		}
-	};
-
 	// tenta exportar os resultados
 	if (const auto& [path_exists, out_dir] = validate_output_dir(); path_exists) {
 		_output_dir = out_dir;
-		export_to(out_dir/obj_filename, write_cloud);
+		io::export_to_file(out_dir/obj_filename, sfmPointCloud::write_cloud);
 		if (!cloud_only) {
-			export_to(out_dir/sfm_filename, write_pose);
+			io::export_to_file(out_dir/sfm_filename, sfmPointCloud::write_pose);
 		}
 		std::cout << std::endl;
 	} else {
@@ -356,6 +325,4 @@ void sfmPointCloud::export_results(bool cloud_only, const char* obj_filename, co
 	}
 }
 
-/** @todo concatenar nuvens de pontos e exportar arquivos finais */
 /** @todo permitir que os parâmetros do algoritmo de janela deslizante sejam alterados através da linha de comando */
-/** @todo abstrair toda a lógica que lida com arquivos para uma unidade de tradução separada */

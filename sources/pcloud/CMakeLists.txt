@@ -11,7 +11,8 @@ add_executable(
 	"${INCLUDE_DIR}/logger.h" 
 	"${SRC_DIR}/main.cpp" 
 	"${SRC_DIR}/cmdline_parser.cpp" 
-	"${SRC_DIR}/sfmPointCloud.cpp"
+	"${SRC_DIR}/sfmPointCloud.cpp" 
+	"${SRC_DIR}/io.cpp"
 )
 
 # Setting target's properties
