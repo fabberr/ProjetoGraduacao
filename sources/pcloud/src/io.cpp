@@ -26,14 +26,18 @@ namespace fs = std::filesystem; // filesystem namespace alias
  *        receber como seu único arugumento uma referência à um objeto 
  *        std::ifstream e retornar `true` apenas caso seja bem sucedida em 
  *        realizar todas as suas operações de leitura.
+ * @param mode Indica o modo de abertura do arquivo. Opcional, 
+ *        `std::ios_base::in` por padrão
  *
  * @returns `true` se a operação de leitura foi bem sucedida, `false` caso
  *          contrário.
 */
-bool io::import_from_file(const fs::path& filename, const std::function<bool(std::ifstream&)>& read_fn) {
+bool io::import_from_file(const fs::path& filename, const std::function<bool(std::ifstream&)>& read_fn, std::ios_base::openmode mode) {
+
+	mode |= std::ios_base::in;
 
 	bool success{};
-	if (std::ifstream file{filename}; file.is_open()) {
+	if (std::ifstream file{filename, mode}; file.is_open()) {
 		success = read_fn(file);
 		file.close();
 	} else {
@@ -55,14 +59,18 @@ bool io::import_from_file(const fs::path& filename, const std::function<bool(std
  *        receber como seu único arugumento uma referência à um objeto 
  *        std::ofstream e retornar `true` apenas caso seja bem sucedida em 
  *        realizar todas as suas operações de escrita.
+ * @param mode Indica o modo de abertura do arquivo. Opcional, 
+ *        `std::ios_base::out` por padrão
  *
  * @returns `true` se a operação de escrita foi bem sucedida, `false` caso
  *          contrário.
 */
-bool io::export_to_file(const fs::path& filename, const std::function<bool(std::ofstream&)>& write_fn) {
+bool io::export_to_file(const fs::path& filename, const std::function<bool(std::ofstream&)>& write_fn, std::ios_base::openmode mode) {
+
+	mode |= std::ios_base::out;
 
 	bool success{};
-	if (std::ofstream file{filename}; file.is_open()) {
+	if (std::ofstream file{filename, mode}; file.is_open()) {
 		success = write_fn(file);
 		file.close();
 		std::cout << "    Exportado: `" << filename.c_str() << "`\n";

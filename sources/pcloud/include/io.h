@@ -19,8 +19,19 @@ namespace io {
 
 	/********** Funções (declaração) **********/
 
-	bool import_from_file(const fs::path& filename, const std::function<bool(std::ifstream&)>& read_fn);
-	bool export_to_file(const fs::path& filename, const std::function<bool(std::ofstream&)>& write_fn);
+	bool 
+	import_from_file(
+		const fs::path& filename, 
+		const std::function<bool(std::ifstream&)>& read_fn, 
+		std::ios_base::openmode mode = std::ios_base::in
+	);
+
+	bool 
+	export_to_file(
+		const fs::path& filename, 
+		const std::function<bool(std::ofstream&)>& write_fn, 
+		std::ios_base::openmode mode = std::ios_base::out
+	);
 	
 } // namespace io
 
