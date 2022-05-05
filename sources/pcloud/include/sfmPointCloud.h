@@ -36,9 +36,10 @@ private:
 public:
 	/********** Construtores & Destrutor **********/
 
-	sfmPointCloud() = delete;
-	sfmPointCloud(const sfmPointCloud&) = delete;
-	sfmPointCloud(sfmPointCloud&&) = delete;
+	sfmPointCloud() 					= delete; 	/** Default constructor (deleted). */
+	sfmPointCloud(const sfmPointCloud&) = delete; 	/** Copy constructor (deleted). */
+	sfmPointCloud(sfmPointCloud&&) 		= delete; 	/** Move constructor (deleted). */
+	
 	sfmPointCloud(const ctrl::args&);
 
 	virtual ~sfmPointCloud();

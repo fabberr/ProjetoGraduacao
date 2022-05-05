@@ -2,8 +2,9 @@
 
 // libc++
 #include <iostream> 		// i/o streams
-#include <string> 			// std::string
+#include <sstream> 			// string streams
 #include <fstream> 			// std::ofstream, std::ifstream
+#include <string> 			// std::string, getline
 #include <algorithm> 		// std::count_if, std::transform, std::sort
 #include <functional> 		// std::hash
 #include <string_view> 		// std::string_view
@@ -34,11 +35,11 @@ namespace fs = std::filesystem; // filesystem namespace alias
  * Construtor.
  * Instancia um objeto sfmPointCloud a partir dos argumentos da linha de comando.
 */
-sfmPointCloud::sfmPointCloud(const ctrl::args& args) : 
+sfmPointCloud::sfmPointCloud(const ctrl::args& args) :
 	// inicializando variáveis
-	_args(args), 
+	_args(args),
 	_images(),
-	_K(), 
+	_K(),
 	_Rts(),
 	_point_cloud(),
 	_output_dir()
@@ -70,7 +71,7 @@ sfmPointCloud::sfmPointCloud(const ctrl::args& args) :
 			auto ext = entry.path().extension().native();
 			std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 			auto ext_lower = ext.c_str();
-			
+
 			if (ext_whitelist.find(ext_lower) != ext_whitelist.end()) {
 				// garante que o caminho seja absoluto
 				const auto path = (entry.path().is_absolute()) ? entry.path() : fs::absolute(entry.path());
@@ -90,24 +91,24 @@ sfmPointCloud::sfmPointCloud(const ctrl::args& args) :
 	}
 
 	// construir K
-	_K = (cv::Mat_<double>(3, 3) << 
-		_args.f,    0   , _args.cx, 
-		   0   , _args.f, _args.cy, 
+	_K = (cv::Mat_<double>(3, 3) <<
+		_args.f,    0   , _args.cx,
+		   0   , _args.f, _args.cy,
 		   0   ,    0   ,    1
 	);
 
 #if defined(_DEBUG) || defined(DEBUG)
 	// debug build
-	std::cout << 
-		"Objeto sfmPointCloud instanciado:\n" 
+	std::cout <<
+		"Objeto sfmPointCloud instanciado:\n"
 		"    Imagens carregadas: " << _images.size()
 	<< std::endl;
 	for (const auto& path : _images) {
 		std::cout << "        >`" << path << "`\n";
 	}
-	std::cout << 
-		"    _K (inicial):\n" 
-		<< _K << '\n' 
+	std::cout <<
+		"    _K (inicial):\n"
+		<< _K << '\n'
 	<< std::endl;
 #endif
 }
@@ -129,7 +130,7 @@ void sfmPointCloud::compute_sparse() {
 	 * @param size Tamanho da janela.
 	*/
 	const auto compute_partial = [this](std::size_t lower, std::size_t upper, std::uint8_t size) {
-		
+
 		// criando dataset parcial
 		std::vector<cv::String> partial{};
 		partial.reserve(size);
@@ -152,11 +153,11 @@ void sfmPointCloud::compute_sparse() {
 		cv::Mat K_refined = _K.clone(); 		// matriz intrínseca refinada
 		cv::sfm::reconstruct(partial, Rs_est, ts_est, K_refined, points3d_est, true);
 
-		std::cout << "\n" 
-			"Cena reconstruída:\n" 
-			"    Pontos estimados: "  << points3d_est.size() << "\n" 
-			"    Poses estimadas: " << Rs_est.size() << "\n" 
-			"    Valores intrínsecos refinados:\n" << K_refined << "\n" 
+		std::cout << "\n"
+			"Cena reconstruída:\n"
+			"    Pontos estimados: "  << points3d_est.size() << "\n"
+			"    Poses estimadas: " << Rs_est.size() << "\n"
+			"    Valores intrínsecos refinados:\n" << K_refined << "\n"
 		<< std::endl;
 
 		// extrair nuvem de pontos
@@ -186,7 +187,7 @@ void sfmPointCloud::compute_sparse() {
 	// iterando sobre o vetor de caminhos `_images` usando um algoritmo janela deslizante circular com interseção
 	const std::uint8_t SLIDING_WINDOW_SIZE 			= 3; 	// tamanho do segmento
 	const std::uint8_t SLIDING_WINDOW_INTERSECTION 	= 2; 	// quantidade de elementos na interseção entre o segmento atual e o anterior
-	const std::uint8_t SLIDING_WINDOW_STEP 			= 
+	const std::uint8_t SLIDING_WINDOW_STEP 			=
 		SLIDING_WINDOW_SIZE - SLIDING_WINDOW_INTERSECTION; 	// quantidade de índices a incrementar a cada iteração
 	std::size_t lower = 0, upper = SLIDING_WINDOW_SIZE; 	// limites inferior e superior da janela
 	while (lower < _images.size()) {
@@ -197,17 +198,21 @@ void sfmPointCloud::compute_sparse() {
 		upper = (upper + SLIDING_WINDOW_STEP) % _images.size();
 	}
 
-	// concatenar as nuvens de pontos
+	// concatenar as nuvens de pontos e exportar resultado final
 	if (fs::exists(_output_dir)) {
+
+		std::cout << "Fundindo nuvens parciais...";
 		_point_cloud.clear();
-		
-		// lista de vértices, formato: "v <x> <y> <z>\n"
 		for (const auto& entry : fs::directory_iterator(_output_dir)) {
 			if (std::strncmp(entry.path().extension().c_str(), ".obj", 4) == 0) {
 				using namespace std::placeholders;
 				io::import_from_file(entry.path(), std::bind(&sfmPointCloud::read_cloud, this, _1));
 			}
 		}
+		std::cout << "OK\n";
+
+		std::cout << "Exportando nuvem completa:\n";
+		export_results();
 	} else {
 		log_error_and_exit("Diretório de saída `%s` não existe\n", _output_dir.c_str());
 	}
@@ -217,13 +222,16 @@ void sfmPointCloud::compute_sparse() {
 
 /** Importa a nuvem de pontos parcial para uma stream de arquivo aberta. */
 bool sfmPointCloud::read_cloud(std::ifstream& file) {
-	// lista de vértices, formato: "v <x> <y> <z>\n"
-	while (file) {
-		char v[1];
-		cv::Point3f pt{};
-		file >> v >> pt.x >> pt.y >> pt.z;
 
-		_point_cloud.emplace_back(pt.x, pt.y, pt.z);
+	// lê linha por linha, até o final do arquivo
+	for (std::string line{}; std::getline(file, line); ) {
+		std::istringstream ss{line};
+		cv::Point3f pt{};
+
+		// formato: "v <x> <y> <z>\n"
+		ss.get(); 						// ignora 1 char (`v`)
+		ss >> pt.x >> pt.y >> pt.z; 	// lê coordenados do ponto
+		_point_cloud.emplace_back(pt); 	// acumula valores lidos na nuvem de pontos
 	}
 	return true;
 }
@@ -273,20 +281,20 @@ bool sfmPointCloud::write_pose(std::ofstream& file) {
  * Exporta a nuvem de pontos como um arquivo .obj (apens lista de vértices) e as
  * poses estimadas de cada câmera como um arquivo .sfm.
  *
- * @param cloud_only Determina se apenas a nuvem de pontos deve ser exportada. 
+ * @param cloud_only Determina se apenas a nuvem de pontos deve ser exportada.
  *        Opcional, `false` por padrão.
- * @param obj_filename Nome do arquivo .obj. Opcional, `point_cloud.obj` por 
+ * @param obj_filename Nome do arquivo .obj. Opcional, `point_cloud.obj` por
  *        padrão.
  * @param sfm_filename Nome do arquivo .sfm. Opcional, `pose.sfm` por padrão.
 */
 void sfmPointCloud::export_results(bool cloud_only, const char* obj_filename, const char* sfm_filename) {
 
 	/**
-	 * Helper function: determina o caminho de saída final e tenta criá-lo caso ele 
-	 * não exista.
-	 * 
-	 * @returns Um std::pair contendo `true` e o caminho até o diretório de saída 
-	 * validado ou `false` e um caminho vazio caso falhe em criar o diretório.
+	 * Helper function: determina o caminho de saída final baseado no nome do 
+	 * diretório de entrada e tenta criá-lo caso ele não exista.
+	 *
+	 * @returns Um std::pair contendo `true` e o caminho até o diretório de saída
+	 * final ou `false` e um caminho vazio caso falhe em criar o diretório.
 	*/
 	const auto validate_output_dir = [this] {
 		// determinando nome do dataset
@@ -295,7 +303,7 @@ void sfmPointCloud::export_results(bool cloud_only, const char* obj_filename, co
 			_args.input_path.parent_path().filename() 					// senão, use nome do diretório pai
 		);
 		fs::path out_dir = _args.output_path/dataset_name; // caminho final
-		
+
 		// tenta criar o diretório de saída caso ele não exista
 		if (!fs::exists(out_dir)) {
 			std::error_code ec;
@@ -303,8 +311,8 @@ void sfmPointCloud::export_results(bool cloud_only, const char* obj_filename, co
 				// failure state
 				log_error(
 					"sfmPointCloud::export_results: Não foi possível criar diretório de saída `%s`\n"
-					"\t%s\n", 
-					out_dir.c_str(), 
+					"\t%s\n",
+					out_dir.c_str(),
 					ec.message().c_str()
 				);
 				return std::make_pair(false, fs::path{});
@@ -315,8 +323,13 @@ void sfmPointCloud::export_results(bool cloud_only, const char* obj_filename, co
 
 	// tenta exportar os resultados
 	if (const auto& [path_exists, out_dir] = validate_output_dir(); path_exists) {
-		_output_dir = out_dir;
-		
+
+		static bool final_export_directory_set = false;
+		if (!final_export_directory_set) {
+			final_export_directory_set = true;
+			_output_dir = out_dir;
+		}
+
 		using namespace std::placeholders;
 		io::export_to_file(out_dir/obj_filename, std::bind(&sfmPointCloud::write_cloud, this, _1));
 		if (!cloud_only) {
@@ -327,5 +340,3 @@ void sfmPointCloud::export_results(bool cloud_only, const char* obj_filename, co
 		log_error("Impossível exportar resultados\n");
 	}
 }
-
-/** @todo permitir que os parâmetros do algoritmo de janela deslizante sejam alterados através da linha de comando */
