@@ -180,8 +180,10 @@ void sfmPointCloud::compute_sparse() {
 		std::cout << "OK\n";
 
 		// exporta nuvem de pontos parcial
-		std::cout << "Exportando nuvem de pontos parcial\n";
-		export_results(true, std::string{"partial_cloud_0" + std::to_string(lower + 1) + ".obj"}.c_str());
+		std::cout << "Exportando nuvem de pontos parcial:\n";
+		std::ostringstream oss{};
+		oss << "partial_cloud_" << (lower + 1 > 9 ? "0" : "00") << (lower + 1) << ".obj";
+		export_results(true, oss.str().c_str());
 	};
 
 	// iterando sobre o vetor de caminhos `_images` usando um algoritmo janela deslizante circular com interseção
