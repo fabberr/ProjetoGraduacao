@@ -222,21 +222,18 @@ void sfmPointCloud::compute_sparse() {
 
 /** Importa a nuvem de pontos parcial para uma stream de arquivo aberta. */
 bool sfmPointCloud::read_cloud(std::ifstream& file) {
+
 	// número de vértices
-	std::string line{};
-	std::getline(file, line);
-	std::istringstream ss{line};
-	std::size_t size{};
-	ss.get(); 	// ignora 1 char (`#`)
-	ss >> size; // número de elementos extra a acumular
+	std::size_t size;
+	file.get(); 	// ignora `#`
+	file >> size; 	// número de vértices
 	_point_cloud.reserve(_point_cloud.size() + size);
 
-	// lista de vértices, formato: "v <x> <y> <z>\n"
-	while (std::getline(file, line)) {
-		ss = std::istringstream{line};
+	// lista de vértices, formato: `v <x> <y> <z>\n`
+	for (std::string line{}; std::getline(file, line); ) {
+		std::istringstream ss{line};
 		cv::Point3f pt{};
 
-		// formato: "v <x> <y> <z>\n"
 		ss.get(); 						// ignora 1 char (`v`)
 		ss >> pt.x >> pt.y >> pt.z; 	// lê coordenados do ponto
 		_point_cloud.emplace_back(pt); 	// acumula valores lidos na nuvem de pontos
