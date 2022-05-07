@@ -1,8 +1,20 @@
-# directories
+# vscode config files
 .vscode
+
+# CMake's binary output directory
 build
+
+# pcloud's default output directory
 output
 
-# Executable (exclude symlink on my machine but keep directory of the name name)
+#
+# Executables
+# Excludes symlinks of built binaries on my machine but keeps directories of the 
+# same name. If you have cloned this repository from a remote git host, these 
+# rules will likely not be of any use to you unless you do something like 
+# `ln -s build/pcloud/pcloud ./pcloud` in the root directory of this repo.
+#
 pcloud
+filter-cloud
 !/sources/pcloud/
+!/sources/filter-cloud/
