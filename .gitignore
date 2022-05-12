@@ -16,5 +16,7 @@ output
 #
 pcloud
 filter-cloud
+packt-sfm
 !/sources/pcloud/
 !/sources/filter-cloud/
+!/sources/packt-sfm/
