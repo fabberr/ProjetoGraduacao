@@ -34,10 +34,10 @@ find_package(
 	COMPONENTS core imgcodecs imgproc features2d flann calib3d xfeatures2d sfm
 )
 
-# Setting include directories and linking libraries
+# Setting up include directories, definitions and linking libraries
 target_include_directories(
 	${PROJECT_NAME} 
 	PRIVATE ${INCLUDE_DIR} # internal header files
 )
-
+target_compile_definitions(${PROJECT_NAME} PRIVATE -DCERES_FOUND)
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
