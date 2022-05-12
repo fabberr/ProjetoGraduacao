@@ -566,7 +566,10 @@ private:
     const std::string TAG = "StructureFromMotion";
 };
 
-
+/*
+export dataset_name="gargoyle" && export dataset_path="datasets/$dataset_name" && export output_dir="output/packt/$dataset_name" && echo dataset_path=$dataset_path && echo output_dir=$output_dir && mkdir -p $output_dir
+./packt-sfm --cloud="$output_dir/point_cloud.obj" --mvs="$output_dir/reconstruction.mvs" $dataset_path
+*/
 int main(int argc, char** argv) {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_DEBUG);
 

@@ -24,28 +24,26 @@ set_target_properties(
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
 
 # Setting up OpenCV
-message(STATUS "Searching for OpenCV package")
 find_package(
 	OpenCV 3.4 REQUIRED 
 	COMPONENTS core imgproc imgcodecs calib3d viz features2d xfeatures2d sfm
 )
 
-# Setting up Eigen
-find_package(Eigen3 REQUIRED)
+# Setting up Boost
+find_package(Boost REQUIRED filesystem graph iostreams program_options system serialization)
 
 # Setting up OpenMVS
 find_package(OpenMVS REQUIRED)
 
-# Setting up Boost
-find_package(Boost REQUIRED filesystem graph)
-
-# Setting include directories and linking libraries
+# Setting up include directories, definitions and linking libraries
 target_include_directories(
 	${PROJECT_NAME} 
 	PRIVATE ${INCLUDE_DIR} 			# internal header files
-	PRIVATE ${EIGEN3_INCLUDE_DIR} 	# libeigen3
-	PRIVATE ${OpenMVS_INCLUDE_DIRS} # libopenmvs
 	PRIVATE ${Boost_INCLUDE_DIR} 	# libboost
+	PRIVATE ${OpenMVS_INCLUDE_DIRS} # libopenmvs
 )
-
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${Boost_LIBRARIES} ${OpenMVS_LIBRARIES})
+target_compile_definitions(${PROJECT_NAME} 
+	PRIVATE -DCERES_FOUND
+	PRIVATE ${OpenMVS_DEFINITIONS}
+)
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${Boost_LIBRARIES} OpenMVS::MVS)
