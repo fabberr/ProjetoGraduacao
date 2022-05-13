@@ -30,7 +30,10 @@ find_package(
 )
 
 # Setting up Boost
-find_package(Boost REQUIRED filesystem graph iostreams program_options system serialization)
+find_package(
+	Boost REQUIRED 
+	COMPONENTS filesystem graph iostreams program_options system serialization
+)
 
 # Setting up OpenMVS
 find_package(OpenMVS REQUIRED)

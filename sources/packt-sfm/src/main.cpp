@@ -3,7 +3,7 @@
 #include <string>
 #include <numeric>
 
-// not needed if compiler flag `-DCERES_FOUND` is set
+// not needed if compiler definition `-DCERES_FOUND` is set
 // #define CERES_FOUND true
 
 #include <opencv2/opencv.hpp>
@@ -600,3 +600,7 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+
+/** @todo modularizar escolha do descritor pela linha de comando */
+/** @todo criar meus próprios datasets */
+/** @todo re-implementar algoritmo de geração de malha do PCL ao pipeline */
