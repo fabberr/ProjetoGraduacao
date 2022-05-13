@@ -7,6 +7,9 @@ build
 # pcloud's default output directory
 output
 
+# gargoyle dataset subfolders
+datasets/gargoyle/*/
+
 #
 # Executables
 # Excludes symlinks of built binaries on my machine but keeps directories of the 
