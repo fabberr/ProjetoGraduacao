@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <string>
 #include <numeric>
+#include <functional>
 
 // not needed if compiler definition `-DCERES_FOUND` is set
 // #define CERES_FOUND true
@@ -30,19 +31,21 @@ namespace fs = boost::filesystem;
 class StructureFromMotion {
 
 public:
-    StructureFromMotion(const std::string& dir,
-            const float matchSurvivalRate = 0.5f,
-            const bool viz = false,
-            const std::string mvs = "",
-            const std::string cloud = "",
-            const bool saveDebug = false)
-        :PAIR_MATCH_SURVIVAL_RATE(matchSurvivalRate),
-         visualize(viz),
-         saveMVS(mvs),
-         saveCloud(cloud),
-         saveDebugVisualizations(saveDebug)
-
-    {
+    StructureFromMotion(
+		const std::string& dir, 
+		const std::string& f2d = "AKAZE", 
+		const float matchSurvivalRate = 0.5f, 
+		const bool viz = false, 
+		const std::string mvs = "", 
+		const std::string cloud = "", 
+		const bool saveDebug = false) : 
+			featureDetector(f2d), 
+			PAIR_MATCH_SURVIVAL_RATE(matchSurvivalRate), 
+			visualize(viz), 
+			saveMVS(mvs), 
+			saveCloud(cloud), 
+			saveDebugVisualizations(saveDebug)
+	{
         findImagesInDiretcory(dir);
     }
 
@@ -87,21 +90,50 @@ private:
     void extractFeatures() {
         CV_LOG_INFO(TAG, "Extract Features");
 
-        auto detector = cv::AKAZE::create();
-        auto extractor = cv::AKAZE::create();
+		/**
+		 * cv::AKAZE is the default algorithm used if an invalid argument was passed, 
+		 * therefore its enumeration must have a value of 0 because a call to 
+		 * `std::map::operator[]` with a key that's not currently on the map will return 
+		 * 0 as the value in our case.
+		*/
+		typedef enum { AKAZE, SIFT, SURF, ORB } f2d_algo;
+		std::map<std::string, f2d_algo> f2d_map {
+			{ "AKAZE", f2d_algo::AKAZE }, 
+			{ "SIFT" , f2d_algo::SIFT  }, 
+			{ "SURF" , f2d_algo::SURF  }, 
+			{ "ORB"  , f2d_algo::ORB   }
+		};
 
-        for (const auto& i : imagesFilenames) {
+		cv::Ptr<cv::Feature2D> f2d;
+		switch (f2d_map[featureDetector]) {
+			case f2d_algo::AKAZE:
+				CV_LOG_INFO(TAG, "Using cv::AKAZE");
+				f2d = cv::AKAZE::create();
+				break;
+			case f2d_algo::SIFT:
+				CV_LOG_INFO(TAG, "Using cv::SIFT");
+				f2d = cv::SIFT::create();
+				break;
+			case f2d_algo::SURF:
+				CV_LOG_INFO(TAG, "Using cv::xfeatures2d::SURF");
+				f2d = cv::xfeatures2d::SURF::create();
+				break;
+			case f2d_algo::ORB:
+				CV_LOG_INFO(TAG, "Using cv::ORB");
+				f2d = cv::ORB::create();
+		}
+
+        for (const auto& img : imagesFilenames) {
             cv::Mat grayscale;
-            cv::cvtColor(images[i], grayscale, cv::COLOR_BGR2GRAY);
-            detector->detect(grayscale, keypoints[i]);
-            extractor->compute(grayscale, keypoints[i], descriptors[i]);
+            cv::cvtColor(images[img], grayscale, cv::COLOR_BGR2GRAY);
+			f2d->detectAndCompute(grayscale, cv::noArray(), keypoints[img], descriptors[img]);
 
-            CV_LOG_INFO(TAG, "Found " + std::to_string(keypoints[i].size()) + " keypoints in " + i);
+            CV_LOG_INFO(TAG, "Found " + std::to_string(keypoints[img].size()) + " keypoints in " + img);
 
             if (saveDebugVisualizations) {
                 cv::Mat out;
-                cv::drawKeypoints(images[i], keypoints[i], out, cv::Scalar(0,0,255));
-                cv::imwrite(fs::basename(fs::path(i)) + "_features.jpg", out);
+                cv::drawKeypoints(images[img], keypoints[img], out, cv::Scalar(0,0,255));
+                cv::imwrite(fs::basename(fs::path(img)) + "_features.jpg", out);
             }
         }
     }
@@ -556,31 +588,33 @@ private:
     std::vector<cv::Vec3b> pointCloudColor;
     cv::Matx33f K_;
 
-    const float MATCH_RATIO_THRESHOLD = 0.8f; // Nearest neighbor matching ratio
-    const float PAIR_MATCH_SURVIVAL_RATE;     // Ratio of surviving matches for a successful stereo match
-    const bool visualize;                     // Show 3D visualization of the sprase cloud?
-    const std::string saveMVS;                     // Save the reconstruction in MVS format for OpenMVS?
-    const std::string saveCloud;                   // Save the reconstruction to a point cloud file?
-    const bool saveDebugVisualizations;       // Save debug visualizations from the reconstruction process
+	const std::string featureDetector; 			// Feature detector to use
+    const float MATCH_RATIO_THRESHOLD = 0.8f; 	// Nearest neighbor matching ratio
+    const float PAIR_MATCH_SURVIVAL_RATE; 		// Ratio of surviving matches for a successful stereo match
+    const bool visualize; 						// Show 3D visualization of the sprase cloud?
+    const std::string saveMVS; 					// Save the reconstruction in MVS format for OpenMVS?
+    const std::string saveCloud; 				// Save the reconstruction to a point cloud file?
+    const bool saveDebugVisualizations; 		// Save debug visualizations from the reconstruction process
 
     const std::string TAG = "StructureFromMotion";
 };
 
 /*
-export dataset_name="gargoyle" && export dataset_path="datasets/$dataset_name" && export output_dir="output/packt/$dataset_name" && echo dataset_path=$dataset_path && echo output_dir=$output_dir && mkdir -p $output_dir
-./packt-sfm --cloud="$output_dir/point_cloud.obj" --mvs="$output_dir/reconstruction.mvs" $dataset_path
+export f2d="AKAZE" && export dataset_name="gargoyle" && export dataset_path="datasets/$dataset_name" && export output_dir="output/packt/$dataset_name" && echo f2d=$f2d && echo dataset_path=$dataset_path && echo output_dir=$output_dir && mkdir -p $output_dir
+./packt-sfm --f2d=$f2d --cloud="$output_dir/point_cloud_$f2d.obj" --mvs="$output_dir/reconstruction_$f2d.mvs" $dataset_path
 */
 int main(int argc, char** argv) {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_DEBUG);
 
     cv::CommandLineParser parser(argc, argv,
-                                 "{help h ? |       | help message}"
-                                 "{@dir     | .     | directory with image files for reconstruction }"
-                                 "{mrate    | 0.5   | Survival rate of matches to consider image pair success }"
-                                 "{viz      | false | Visualize the sparse point cloud reconstruction? }"
-                                 "{debug    | false | Save debug visualizations to files? }"
-                                 "{mvs      |       | Save reconstruction to an .mvs file. Provide filename }"
-                                 "{cloud    |       | Save reconstruction to a point cloud file (PLY, XYZ and OBJ). Provide filename}"
+                                 "{ help h ? |       | Displays help message }"
+                                 "{ @dir     | .     | Directory with image files for reconstruction. }"
+								 "{ f2d      | AKAZE | Feature detector and descriptor used, AKAZE is the default. Supported algorithms are AKAZE, SIFT, SURF and OBR. }"
+                                 "{ mrate    | 0.5   | Survival rate of matches to consider image pair success. }"
+                                 "{ viz      | false | Visualize the sparse point cloud reconstruction? }"
+                                 "{ debug    | false | Save debug visualizations to files? }"
+                                 "{ mvs      |       | Save reconstruction to an .mvs file. Provide filename. }"
+                                 "{ cloud    |       | Save reconstruction to a point cloud file (PLY, XYZ and OBJ). Provide filename. }"
     );
 
     if (parser.has("help"))
@@ -589,18 +623,16 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    StructureFromMotion sfm(parser.get<std::string>("@dir"),
-                            parser.get<float>("mrate"),
-                            parser.get<bool>("viz"),
-                            parser.get<std::string>("mvs"),
-                            parser.get<std::string>("cloud"),
-                            parser.get<bool>("debug")
-                            );
+    StructureFromMotion sfm(
+		parser.get<std::string>("@dir"), 
+		parser.get<std::string>("f2d"), 
+		parser.get<float>("mrate"), 
+		parser.get<bool>("viz"), 
+		parser.get<std::string>("mvs"), 
+		parser.get<std::string>("cloud"), 
+		parser.get<bool>("debug")
+	);
     sfm.runSfM();
 
     return 0;
 }
-
-/** @todo modularizar escolha do descritor pela linha de comando */
-/** @todo criar meus próprios datasets */
-/** @todo re-implementar algoritmo de geração de malha do PCL ao pipeline */
