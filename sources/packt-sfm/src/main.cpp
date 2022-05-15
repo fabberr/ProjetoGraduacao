@@ -90,35 +90,21 @@ private:
     void extractFeatures() {
         CV_LOG_INFO(TAG, "Extract Features");
 
-		/**
-		 * cv::AKAZE is the default algorithm used if an invalid argument was passed, 
-		 * therefore its enumeration must have a value of 0 because a call to 
-		 * `std::map::operator[]` with a key that's not currently on the map will return 
-		 * 0 as the value in our case.
-		*/
-		typedef enum { AKAZE, SIFT, SURF, ORB } f2d_algo;
-		std::map<std::string, f2d_algo> f2d_map {
-			{ "AKAZE", f2d_algo::AKAZE }, 
-			{ "SIFT" , f2d_algo::SIFT  }, 
-			{ "SURF" , f2d_algo::SURF  }, 
-			{ "ORB"  , f2d_algo::ORB   }
-		};
-
 		cv::Ptr<cv::Feature2D> f2d;
 		switch (f2d_map[featureDetector]) {
-			case f2d_algo::AKAZE:
+			case f2d_t::AKAZE:
 				CV_LOG_INFO(TAG, "Using cv::AKAZE");
 				f2d = cv::AKAZE::create();
 				break;
-			case f2d_algo::SIFT:
+			case f2d_t::SIFT:
 				CV_LOG_INFO(TAG, "Using cv::SIFT");
 				f2d = cv::SIFT::create();
 				break;
-			case f2d_algo::SURF:
+			case f2d_t::SURF:
 				CV_LOG_INFO(TAG, "Using cv::xfeatures2d::SURF");
 				f2d = cv::xfeatures2d::SURF::create();
 				break;
-			case f2d_algo::ORB:
+			case f2d_t::ORB:
 				CV_LOG_INFO(TAG, "Using cv::ORB");
 				f2d = cv::ORB::create();
 		}
@@ -161,24 +147,23 @@ private:
     void matchFeatures() {
         CV_LOG_INFO(TAG, "Match Features");
 
-        cv::BFMatcher matcher(cv::NORM_HAMMING);
+		const auto& eval_f2d = f2d_map[featureDetector];
+        cv::BFMatcher matcher((eval_f2d == f2d_t::SIFT || eval_f2d == f2d_t::SURF) ? cv::NORM_L1 : cv::NORM_HAMMING);
 
-        for (size_t i = 0; i < imagesFilenames.size() - 1; ++i) {
-            for (size_t j = i + 1; j < imagesFilenames.size(); ++j) {
-                const std::string imgi = imagesFilenames[i];
-                const std::string imgj = imagesFilenames[j];
+		for (auto imgLeft = imagesFilenames.begin(); imgLeft != imagesFilenames.end(); ++imgLeft) {
+			for (auto imgRight = imgLeft + 1; imgRight < imagesFilenames.end(); ++imgRight) {
 
                 // Match with ratio test filter
-                std::vector<cv::DMatch> match = matchWithRatioTest(matcher, descriptors[imgi], descriptors[imgj]);
+                std::vector<cv::DMatch> match = matchWithRatioTest(matcher, descriptors[*imgLeft], descriptors[*imgRight]);
 
                 // Reciprocity test filter
-                std::vector<cv::DMatch> matchRcp = matchWithRatioTest(matcher, descriptors[imgj], descriptors[imgi]);
+                std::vector<cv::DMatch> matchRcp = matchWithRatioTest(matcher, descriptors[*imgRight], descriptors[*imgLeft]);
                 std::vector<cv::DMatch> merged;
                 for (const cv::DMatch& dmr : matchRcp) {
                     bool found = false;
                     for (const cv::DMatch& dm : match) {
-                        // Only accept match if 1 matches 2 AND 2 matches 1.
-                        if (dmr.queryIdx == dm.trainIdx and dmr.trainIdx == dm.queryIdx) {
+                        // Only accept match if left matches right AND right matches left.
+                        if (dmr.queryIdx == dm.trainIdx && dmr.trainIdx == dm.queryIdx) {
                             merged.push_back(dm);
                             found = true;
                             break;
@@ -191,12 +176,12 @@ private:
 
                 // Fundamental matrix filter
                 std::vector<std::uint8_t> inliersMask(merged.size());
-                std::vector<cv::Point2f> imgiPoints, imgjPoints;
+                std::vector<cv::Point2f> imgLeftPoints, imgRightPoints;
                 for (const auto& m : merged) {
-                    imgiPoints.push_back(keypoints[imgi][m.queryIdx].pt);
-                    imgjPoints.push_back(keypoints[imgj][m.trainIdx].pt);
+                    imgLeftPoints.push_back(keypoints[*imgLeft][m.queryIdx].pt);
+                    imgRightPoints.push_back(keypoints[*imgRight][m.trainIdx].pt);
                 }
-                cv::findFundamentalMat(imgiPoints, imgjPoints, inliersMask);
+                cv::findFundamentalMat(imgLeftPoints, imgRightPoints, inliersMask);
 
                 std::vector<cv::DMatch> final;
                 for (size_t m = 0; m < merged.size(); m++) {
@@ -206,35 +191,35 @@ private:
                 }
 
                 if ((float)final.size() / (float)match.size() < PAIR_MATCH_SURVIVAL_RATE) {
-                    CV_LOG_INFO(TAG, "Final match '" + imgi + "'->'" + imgj + "' has less than " + std::to_string(PAIR_MATCH_SURVIVAL_RATE) + " inliers from orignal. Skip");
+                    CV_LOG_INFO(TAG, "Final match '" + (*imgLeft) + "'->'" + (*imgRight) + "' has less than " + std::to_string(PAIR_MATCH_SURVIVAL_RATE) + " inliers from orignal. Skip");
                     continue;
                 }
 
-                matches[make_pair(imgi, imgj)] = final;
+                matches[{*imgLeft, *imgRight}] = final;
 
-                CV_LOG_INFO(TAG, "Matching " + imgi + " and " + imgj + ": " + std::to_string(final.size()) + " / " + std::to_string(match.size()));
+                CV_LOG_INFO(TAG, "Matching " + (*imgLeft) + " and " + (*imgRight) + ": " + std::to_string(final.size()) + " / " + std::to_string(match.size()));
 
                 if (saveDebugVisualizations) {
                     cv::Mat out;
                     std::vector<cv::DMatch> rawmatch;
-                    matcher.match(descriptors[imgi], descriptors[imgj], rawmatch);
+                    matcher.match(descriptors[*imgLeft], descriptors[*imgRight], rawmatch);
                     std::vector<std::pair<std::string, std::vector<cv::DMatch>& > > showList{
                             {"Raw Match", rawmatch},
                             {"Ratio Test Filter", match},
                             {"Reciprocal Filter", merged},
                             {"Epipolar Filter", final}
                     };
-                    for (size_t i = 0; i< showList.size(); i++) {
-                        cv::drawMatches(images[imgi], keypoints[imgi],
-                                    images[imgj], keypoints[imgj],
+                    for (size_t i = 0; i < showList.size(); i++) {
+                        cv::drawMatches(images[*imgLeft], keypoints[*imgLeft],
+                                    images[*imgRight], keypoints[*imgRight],
                                     showList[i].second, out, CV_RGB(255,0,0));
                         cv::putText(out, showList[i].first, cv::Point(10,50), cv::FONT_HERSHEY_COMPLEX, 2.0, CV_RGB(255,255,255), 2);
                         cv::putText(out, "# Matches: " + std::to_string(showList[i].second.size()), cv::Point(10,100), cv::FONT_HERSHEY_COMPLEX, 1.0, CV_RGB(255,255,255));
-                        cv::imwrite(fs::basename(fs::path(imgi)) + "_" + fs::basename(fs::path(imgj)) + "_" + std::to_string(i) + ".jpg", out);
+                        cv::imwrite(fs::basename(fs::path(*imgLeft)) + "_" + fs::basename(fs::path(*imgRight)) + "_" + std::to_string(i) + ".jpg", out);
                     }
                 }
-            }
-        }
+			}
+		}
     }
 
     void buildTracks() {
@@ -597,11 +582,27 @@ private:
     const bool saveDebugVisualizations; 		// Save debug visualizations from the reconstruction process
 
     const std::string TAG = "StructureFromMotion";
+
+	/**
+	 * cv::AKAZE is the default algorithm used if an invalid argument was passed,
+	 * therefore its enumeration must have a value of 0 because, in our case, a call
+	 * to `std::map::operator[]` with a key that's not currently on the map will 
+	 * return 0 as the newly inserted value.
+	*/
+	typedef enum { AKAZE, SIFT, SURF, ORB } f2d_t;
+	std::map<std::string, f2d_t> f2d_map {
+		{ "AKAZE", f2d_t::AKAZE }, 
+		{ "SIFT" , f2d_t::SIFT  }, 
+		{ "SURF" , f2d_t::SURF  }, 
+		{ "ORB"  , f2d_t::ORB   }
+	};
 };
 
 /*
+Example usage:
 export f2d="AKAZE" && export dataset_name="gargoyle" && export dataset_path="datasets/$dataset_name" && export output_dir="output/packt/$dataset_name" && echo f2d=$f2d && echo dataset_path=$dataset_path && echo output_dir=$output_dir && mkdir -p $output_dir
-./packt-sfm --f2d=$f2d --cloud="$output_dir/point_cloud_$f2d.obj" --mvs="$output_dir/reconstruction_$f2d.mvs" $dataset_path
+time ./packt-sfm --f2d=$f2d --cloud="$output_dir/point_cloud_$f2d.obj" $dataset_path
+./filter-cloud "$output_dir/point_cloud_$f2d.obj" 1
 */
 int main(int argc, char** argv) {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_DEBUG);
