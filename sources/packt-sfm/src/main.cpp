@@ -587,7 +587,7 @@ private:
 	 * cv::AKAZE is the default algorithm used if an invalid argument was passed,
 	 * therefore its enumeration must have a value of 0 because, in our case, a call
 	 * to `std::map::operator[]` with a key that's not currently on the map will 
-	 * return 0 as the newly inserted value.
+	 * return 0 as the reference to the newly inserted value for said key.
 	*/
 	typedef enum { AKAZE, SIFT, SURF, ORB } f2d_t;
 	std::map<std::string, f2d_t> f2d_map {
@@ -600,9 +600,9 @@ private:
 
 /*
 Example usage:
-export f2d="AKAZE" && export dataset_name="gargoyle" && export dataset_path="datasets/$dataset_name" && export output_dir="output/packt/$dataset_name" && echo f2d=$f2d && echo dataset_path=$dataset_path && echo output_dir=$output_dir && mkdir -p $output_dir
-time ./packt-sfm --f2d=$f2d --cloud="$output_dir/point_cloud_$f2d.obj" $dataset_path
-./filter-cloud "$output_dir/point_cloud_$f2d.obj" 1
+{ export f2d="AKAZE" dataset_name="gargoyle" dataset_path="datasets/$dataset_name" output_dir="output/packt/$dataset_name";echo f2d=$f2d;echo dataset_path=$dataset_path;echo output_dir=$output_dir;mkdir -p $output_dir; }
+{ time ./packt-sfm --f2d=$f2d --cloud="$output_dir/${f2d}_point_cloud.obj" $dataset_path > "$output_dir/${f2d}_output.txt" 2>&1; } 2> "$output_dir/${f2d}_time.txt"
+./filter-cloud "$output_dir/${f2d}_point_cloud.obj" 1
 */
 int main(int argc, char** argv) {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_DEBUG);

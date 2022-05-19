@@ -38,15 +38,27 @@ find_package(
 # Setting up OpenMVS
 find_package(OpenMVS REQUIRED)
 
+# Setting up PCL
+find_package(
+	PCL 1.12 REQUIRED
+	COMPONENTS common io surface
+)
+
 # Setting up include directories, definitions and linking libraries
 target_include_directories(
 	${PROJECT_NAME} 
 	PRIVATE ${INCLUDE_DIR} 			# internal header files
 	PRIVATE ${Boost_INCLUDE_DIR} 	# libboost
 	PRIVATE ${OpenMVS_INCLUDE_DIRS} # libopenmvs
+	PRIVATE ${PCL_INCLUDE_DIRS} 	# libpcl
+)
+target_link_directories(
+	${PROJECT_NAME}
+	PRIVATE ${PCL_LIBRARY_DIRS}
 )
 target_compile_definitions(${PROJECT_NAME} 
 	PRIVATE -DCERES_FOUND
 	PRIVATE ${OpenMVS_DEFINITIONS}
+	PRIVATE ${PCL_DEFINITIONS}
 )
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${Boost_LIBRARIES} OpenMVS::MVS)
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${Boost_LIBRARIES} OpenMVS::MVS ${PCL_LIBRARIES})
