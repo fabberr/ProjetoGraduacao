@@ -20,6 +20,8 @@ datasets/gargoyle/*/
 pcloud
 filter-cloud
 packt-sfm
+mesh
 !/sources/pcloud/
 !/sources/filter-cloud/
 !/sources/packt-sfm/
+!/sources/mesh/
