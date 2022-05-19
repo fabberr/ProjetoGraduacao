@@ -18,11 +18,6 @@ set_target_properties(
 	CXX_STANDARD 20
 )
 
-# Instruct basic signature of `find_package` function to fall back to "Config" 
-# mode immediately instead of trying "Module" mode first since no libraries used
-# provide a Find Module
-set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
-
 # Setting up OpenCV
 find_package(
 	OpenCV 3.4 REQUIRED 
