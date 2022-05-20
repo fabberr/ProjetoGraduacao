@@ -8,8 +8,10 @@ set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 # Creating executable target
 add_executable(
 	${PROJECT_NAME} 
+	"${INCLUDE_DIR}/logger.h"
 	"${SRC_DIR}/main.cpp"
 	"${SRC_DIR}/SurfaceRecon.cpp"
+	"${SRC_DIR}/SurfaceReconstruction.cpp"
 )
 
 # Setting target's properties
@@ -22,7 +24,7 @@ set_target_properties(
 # Setting up PCL
 find_package(
 	PCL 1.12 REQUIRED
-	COMPONENTS common io surface
+	COMPONENTS common io surface features
 )
 
 # Setting up include directories, definitions and linking libraries
