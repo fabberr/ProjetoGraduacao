@@ -19,45 +19,54 @@ namespace fs = std::filesystem; // filesystem namespace alias
 /** Wrapper para algoritmos de reconstrução de superfície do PCL. */
 class SurfaceRecon {
 public:
-	/********** Tipos Membro Públicos **********/
+	/********** Enums Públicos **********/
+	typedef enum { NONE, GREEDY_PROJECTION, POISSON } recon_t;
 
-	using point_t = pcl::PointXYZ;
-	using mesh_t = pcl::PolygonMesh;
+private:
+	/********** Tipos Membro Privados **********/
+
+	using point_t 	= pcl::PointXYZ;
+	using mesh_t 	= pcl::PolygonMesh;
 
 	typedef pcl::PointCloud<point_t> 				cloud_t;
-	typedef pcl::PointCloud<pcl::PointNormal> 		cloudNormals_t;
-	typedef pcl::search::KdTree<pcl::PointNormal> 	kdtree_t;
-	
+	typedef pcl::PointCloud<pcl::PointNormal> 		cloud_norm_t;
+	typedef pcl::search::KdTree<point_t> 			tree_t;
+	typedef pcl::search::KdTree<pcl::PointNormal> 	tree_norm_t;
+
 private:
 	/********** Membros Privados **********/
+	
+	fs::path _cloud_path; /** Caminho até o arquivo .obj contendo a nuvem de pontos. */
 
-	fs::path _cloud_path; /** Caminho ate o arquivo .obj contendo a nuvem de pontos. */
-
-	cloud_t::Ptr 		_cloud			= nullptr; /** Nuvem de pontos carregada do arquivo. */
-	cloudNormals_t::Ptr _cloud_normals 	= nullptr; /** Nuvem de pontos com as normais dos vértices. */
-	mesh_t::Ptr 		_mesh 			= nullptr; /** Superfície gerada. */
+	cloud_t::Ptr 		_cloud 			= nullptr; /** Nuvem de pontos carregada do arquivo. */
+	cloud_norm_t::Ptr 	_cloud_normals 	= nullptr; /** Nuvem de pontos com as normais da superfície estimadas. */
+	mesh_t::Ptr 		_mesh 			= nullptr; /** Malha poligonal reconstruída. */
 
 public:
-	/********** Construtores & Destrutor (declaração) **********/
+	/********** Construtores & Destrutor **********/
+	
+	SurfaceRecon() 						= delete; /** Default Constructor (deleted). */
+	SurfaceRecon(const SurfaceRecon&) 	= delete; /** Copy Constructor (deleted). */
+	SurfaceRecon(SurfaceRecon&&) 		= delete; /** Move Constructor (deleted). */
 
-	SurfaceRecon() 					= delete; /** Default constructor(deleted) */
-	SurfaceRecon(SurfaceRecon&) 	= delete; /** Copy constructor (deleted) */
-	SurfaceRecon(SurfaceRecon&&) 	= delete; /** Move constructor (deleted) */
-
-	SurfaceRecon(const fs::path& path);
+	SurfaceRecon(const fs::path& cloud_path);
 	virtual ~SurfaceRecon();
 
 private:
 	/********** Funções Membro Privadas **********/
-	bool load_cloud_obj();
-	void export_mesh_obj(const fs::path& filename = "output/packt/gargoyle/SIFT_mesh.obj");
+	
+	bool load_cloud_OBJ();
+	bool export_mesh_OBJ(const fs::path& output_dir, const char* filename = "mesh.obj");
+	
 	void estimate_normals();
+	void reconstruct_greedy_projection();
+	void reconstruct_poisson();
+	void reconstruct_fail();
 
 public:
 	/********** Funções Membro Públicas **********/
-
-	void computeMeshGreedyProjection();
-	void computeMeshPoisson();
+	
+	void reconstruct(recon_t method = recon_t::GREEDY_PROJECTION);
 }; // class SurfaceRecon
 
 #endif // SURFACERECON_H

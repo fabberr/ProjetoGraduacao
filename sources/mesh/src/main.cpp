@@ -1,10 +1,7 @@
 // #include <SurfaceRecon.h>
-#include <SurfaceReconstruction.h>
+#include <SurfaceRecon.h>
 
 int main() {
-	// SurfaceRecon{"output/packt/gargoyle/SIFT_point_cloud_filtered.obj"}.computeMeshGreedyProjection();
-	
-	SurfaceReconstruction{fs::path{"output/packt/gargoyle"}}.computeMesh();
-
+	SurfaceRecon{"output/packt/gargoyle/SIFT_point_cloud_filtered.obj"}.reconstruct();
 	return 0;
 }
