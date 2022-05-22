@@ -601,7 +601,7 @@ private:
 /*
 Example usage:
 { export f2d="AKAZE" dataset_name="gargoyle" dataset_path="datasets/$dataset_name" output_dir="output/packt/$dataset_name";echo f2d=$f2d;echo dataset_path=$dataset_path;echo output_dir=$output_dir;mkdir -p $output_dir; }
-{ time ./packt-sfm --f2d=$f2d --cloud="$output_dir/${f2d}_point_cloud.obj" $dataset_path > "$output_dir/${f2d}_output.txt" 2>&1; } 2> "$output_dir/${f2d}_time.txt"
+{ time ./packt-sfm --f2d=$f2d --cloud="$output_dir/${f2d}_point_cloud.obj" --mvs="$output_dir/${f2d}_reconstruction.mvs" $dataset_path > "$output_dir/${f2d}_output.txt" 2>&1; } 2> "$output_dir/${f2d}_time.txt"
 ./filter-cloud "$output_dir/${f2d}_point_cloud.obj" 1
 */
 int main(int argc, char** argv) {
