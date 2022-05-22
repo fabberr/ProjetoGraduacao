@@ -11,7 +11,6 @@ add_executable(
 	"${INCLUDE_DIR}/logger.h"
 	"${SRC_DIR}/main.cpp"
 	"${SRC_DIR}/SurfaceRecon.cpp"
-	"${SRC_DIR}/SurfaceReconstruction.cpp"
 )
 
 # Setting target's properties
