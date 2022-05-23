@@ -34,8 +34,10 @@ find_package(
 	Boost REQUIRED 
 	COMPONENTS filesystem graph iostreams program_options system serialization
 )
+# message("Boost_LIBRARIES=${Boost_LIBRARIES}")
 
 # Setting up OpenMVS
+find_package(CGAL REQUIRED)
 find_package(OpenMVS REQUIRED)
 
 # Setting up include directories, definitions and linking libraries
@@ -49,4 +51,4 @@ target_compile_definitions(${PROJECT_NAME}
 	PRIVATE -DCERES_FOUND
 	PRIVATE ${OpenMVS_DEFINITIONS}
 )
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${Boost_LIBRARIES} OpenMVS::MVS)
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${Boost_LIBRARIES} -lboost_filesystem -lboost_system OpenMVS::MVS)
