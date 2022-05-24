@@ -600,9 +600,10 @@ private:
 
 /*
 Example usage:
-{ export f2d="AKAZE" dataset_name="gargoyle" dataset_path="datasets/$dataset_name" output_dir="output/packt/$dataset_name";echo f2d=$f2d;echo dataset_path=$dataset_path;echo output_dir=$output_dir;mkdir -p $output_dir; }
+{ export f2d="AKAZE" dataset_name="gargoyle" dataset_path="datasets/$dataset_name" output_dir="output/packt/$dataset_name" MVS_root="/usr/local/bin/OpenMVS";echo f2d=$f2d;echo dataset_path=$dataset_path;echo output_dir=$output_dir;echo MVS_root=$MVS_root;mkdir -p $output_dir; }
 { time ./packt-sfm --f2d=$f2d --cloud="$output_dir/${f2d}_point_cloud.obj" --mvs="$output_dir/${f2d}_reconstruction.mvs" $dataset_path > "$output_dir/${f2d}_output.txt" 2>&1; } 2> "$output_dir/${f2d}_time.txt"
 ./filter-cloud "$output_dir/${f2d}_point_cloud.obj" 1
+$MVS_root/DensifyPointCloud -i "$output_dir/${f2d}_reconstruction.mvs" -o "$output_dir/${f2d}_dense_cloud"
 */
 int main(int argc, char** argv) {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_DEBUG);
