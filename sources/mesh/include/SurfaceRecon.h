@@ -64,7 +64,7 @@ private:
 	recon_t evaluate_method(const std::string& method);
 	
 	bool load_cloud();
-	bool export_mesh(const char* filename = "mesh.ply");
+	bool export_mesh(const fs::path& filename = "mesh.ply");
 	
 	void estimate_normals();
 	void reconstruct_greedy_projection();

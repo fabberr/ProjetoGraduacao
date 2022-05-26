@@ -62,14 +62,9 @@ SurfaceRecon::SurfaceRecon(const ctrl::args& args) :
  * Libera os recursos instanciados pelo objeto.
 */
 SurfaceRecon::~SurfaceRecon() {
-	_cloud = nullptr;
-
-	_cloud_normals->clear();
-	_cloud_normals = nullptr;
-
-	_mesh->cloud.data.clear();
-	_mesh->polygons.clear();
-	_mesh = nullptr;
+	 _cloud = nullptr;
+	 _cloud_normals = nullptr;
+	 _mesh = nullptr;
 }
 
 /********** Funções Membro Privadas **********/
@@ -121,7 +116,7 @@ bool SurfaceRecon::load_cloud() {
  * 
  * @returns `true` se o arquivo foi escrito com sucesso, `false` caso contrário.
 */
-bool SurfaceRecon::export_mesh(const char* filename) {
+bool SurfaceRecon::export_mesh(const fs::path& filename) {
 
 	/**
 	 * Helper function: define qual método de escrita será usado (OBJ ou PLY).
@@ -132,9 +127,15 @@ bool SurfaceRecon::export_mesh(const char* filename) {
 	*/
 	const auto write = (_cloud_path.extension() == ".obj") 
 		? std::function<bool(const fs::path&)>{[this](const fs::path& filename) {
+			if (_mesh == nullptr) {
+				return false;
+			}
 			return (pcl::io::saveOBJFile(filename, *_mesh) == 0); // 0 on success.
 		}} 
 		: std::function<bool(const fs::path&)>{[this](const fs::path& filename) {
+			if (_mesh == nullptr) {
+				return false;
+			}
 			return (pcl::io::savePLYFile(filename, *_mesh) == 0); // 0 on success.
 		}}
 	;
@@ -198,7 +199,31 @@ void SurfaceRecon::estimate_normals() {
  * para a nuvem de pontos.
 */
 void SurfaceRecon::reconstruct_greedy_projection() {
-	log_info("called `SurfaceRecon::reconstruct_greedy_projection`\n");
+	tree_norm_t::Ptr kdtree(new tree_norm_t);
+	kdtree->setInputCloud(_cloud_normals);
+	
+	pcl::GreedyProjectionTriangulation<pcl::PointNormal> gp3;
+	_mesh = mesh_t::Ptr(new mesh_t);
+	
+	// distância máxima entre of pontos conectados (comprimento máximo das arestas)
+	gp3.setSearchRadius(0.025);
+	
+	// tamanho da vizinhança
+	gp3.setMaximumNearestNeighbors(100);
+	gp3.setMu(2.5);
+	
+	// ângulos mínimo e máximo dos triangulos
+	gp3.setMinimumAngle(M_PI/18); 	// 10°
+	gp3.setMaximumAngle(2*M_PI/3); 	// 120°
+	
+	// ângulo máximo entre as normais de dois pontos
+	gp3.setMaximumSurfaceAngle(M_PI/4); // 45°
+	gp3.setNormalConsistency(false);
+	
+	// reconttrói a malha
+	gp3.setInputCloud(_cloud_normals);
+	gp3.setSearchMethod(kdtree);
+	gp3.reconstruct(*_mesh);
 }
 
 /**
@@ -232,5 +257,5 @@ void SurfaceRecon::reconstruct() {
 
 	estimate_normals();
 	evaluate_and_call(_method);
-	export_mesh();
+	export_mesh(_cloud_path.stem() += "_mesh.ply");
 }
