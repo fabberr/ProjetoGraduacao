@@ -21,7 +21,8 @@ namespace fs = std::filesystem; // filesystem namespace alias
 #include <pcl/features/normal_3d_omp.h> // pcl::NormalEstimationOMP
 #include <pcl/common/io.h> 				// pcl::concatenateFields
 #include <pcl/search/kdtree.h> 			// pcl::KdTree
-#include <pcl/surface/gp3.h> 			// pcl::GreedyProjection
+#include <pcl/surface/gp3.h> 			// pcl::GreedyProjectionTriangulation
+#include <pcl/surface/poisson.h> 		// pcl::Poisson
 
 // internos
 #include <logger.h>
@@ -62,9 +63,9 @@ SurfaceRecon::SurfaceRecon(const ctrl::args& args) :
  * Libera os recursos instanciados pelo objeto.
 */
 SurfaceRecon::~SurfaceRecon() {
-	 _cloud = nullptr;
-	 _cloud_normals = nullptr;
-	 _mesh = nullptr;
+	_cloud = nullptr;
+	_cloud_normals = nullptr;
+	_mesh = nullptr;
 }
 
 /********** Funções Membro Privadas **********/
@@ -199,11 +200,13 @@ void SurfaceRecon::estimate_normals() {
  * para a nuvem de pontos.
 */
 void SurfaceRecon::reconstruct_greedy_projection() {
+
+	log_info("Reconstruindo superfície usando pcl::GreedyProjectionTriangulation\n");
+
 	tree_norm_t::Ptr kdtree(new tree_norm_t);
 	kdtree->setInputCloud(_cloud_normals);
 	
-	pcl::GreedyProjectionTriangulation<pcl::PointNormal> gp3;
-	_mesh = mesh_t::Ptr(new mesh_t);
+	pcl::GreedyProjectionTriangulation<pcl::PointNormal> gp3{};
 	
 	// distância máxima entre of pontos conectados (comprimento máximo das arestas)
 	gp3.setSearchRadius(0.025);
@@ -231,7 +234,16 @@ void SurfaceRecon::reconstruct_greedy_projection() {
  * nuvem de pontos.
 */
 void SurfaceRecon::reconstruct_poisson() {
-	log_info("called `SurfaceRecon::reconstruct_poisson`\n");
+
+	log_info("Reconstruindo superfície usando pcl::Poisson\n");
+	
+	tree_norm_t::Ptr kdtree(new tree_norm_t);
+	kdtree->setInputCloud(_cloud_normals);
+	
+	pcl::Poisson<pcl::PointNormal> poisson_recon{};
+	poisson_recon.setInputCloud(_cloud_normals);
+	poisson_recon.setSearchMethod(kdtree);
+	poisson_recon.reconstruct(*_mesh);
 }
 
 void SurfaceRecon::reconstruct_fail() {
@@ -252,7 +264,8 @@ void SurfaceRecon::reconstruct() {
 			{ GREEDY_PROJECTION, &SurfaceRecon::reconstruct_greedy_projection }, 
 			{ POISSON          , &SurfaceRecon::reconstruct_poisson           }
 		};
-		return (this->*recon_map[method])();
+		_mesh = mesh_t::Ptr(new mesh_t);
+		(this->*recon_map[method])();
 	};
 
 	estimate_normals();
