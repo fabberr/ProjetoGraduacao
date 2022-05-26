@@ -14,12 +14,15 @@ namespace fs = std::filesystem; // filesystem namespace alias
 #include <pcl/PolygonMesh.h> 	// pcl::PolygonMesh
 #include <pcl/search/kdtree.h> 	// pcl::KdTree
 
+// internos
+#include <parser.h> // ctrl::args
+
 /********** SurfaceRecon.h **********/
 
 /** Wrapper para algoritmos de reconstrução de superfície do PCL. */
 class SurfaceRecon {
-public:
-	/********** Enums Públicos **********/
+private:
+	/********** Enums Privados **********/
 	typedef enum { NONE, GREEDY_PROJECTION, POISSON } recon_t;
 
 private:
@@ -36,7 +39,9 @@ private:
 private:
 	/********** Membros Privados **********/
 	
-	fs::path _cloud_path; /** Caminho até o arquivo .obj contendo a nuvem de pontos. */
+	fs::path 	_cloud_path; 	/** Caminho até o arquivo .obj ou .ply contendo a nuvem de pontos. */
+	fs::path 	_output_dir; 	/** Caminho até o diretório de saída. */
+	recon_t 	_method; 		/** Método de reconstrução. */
 
 	cloud_t::Ptr 		_cloud 			= nullptr; /** Nuvem de pontos carregada do arquivo. */
 	cloud_norm_t::Ptr 	_cloud_normals 	= nullptr; /** Nuvem de pontos com as normais da superfície estimadas. */
@@ -49,14 +54,17 @@ public:
 	SurfaceRecon(const SurfaceRecon&) 	= delete; /** Copy Constructor (deleted). */
 	SurfaceRecon(SurfaceRecon&&) 		= delete; /** Move Constructor (deleted). */
 
-	SurfaceRecon(const fs::path& cloud_path);
+	SurfaceRecon(const fs::path& cloud_path, const fs::path& output_dir, const std::string& method);
+	SurfaceRecon(const ctrl::args& args);
 	virtual ~SurfaceRecon();
 
 private:
 	/********** Funções Membro Privadas **********/
+
+	recon_t evaluate_method(const std::string& method);
 	
-	bool load_cloud_OBJ();
-	bool export_mesh_OBJ(const fs::path& output_dir, const char* filename = "mesh.obj");
+	bool load_cloud();
+	bool export_mesh(const char* filename = "mesh.ply");
 	
 	void estimate_normals();
 	void reconstruct_greedy_projection();
@@ -66,7 +74,7 @@ private:
 public:
 	/********** Funções Membro Públicas **********/
 	
-	void reconstruct(recon_t method = recon_t::GREEDY_PROJECTION);
+	void reconstruct();
 }; // class SurfaceRecon
 
 #endif // SURFACERECON_H

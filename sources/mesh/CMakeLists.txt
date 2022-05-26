@@ -10,6 +10,7 @@ add_executable(
 	${PROJECT_NAME} 
 	"${INCLUDE_DIR}/logger.h"
 	"${SRC_DIR}/main.cpp"
+	"${SRC_DIR}/parser.cpp"
 	"${SRC_DIR}/SurfaceRecon.cpp"
 )
 
