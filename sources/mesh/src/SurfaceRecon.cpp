@@ -73,11 +73,11 @@ SurfaceRecon::~SurfaceRecon() {
 /** Avalia e retorna o método de reconstrução a ser usado. */
 SurfaceRecon::recon_t SurfaceRecon::evaluate_method(const std::string& method) {
 	
-	static std::map<std::string, recon_t> method_map{
+	static std::map<std::string, recon_t> map{
 		{ "GREEDY_PROJECTION", recon_t::GREEDY_PROJECTION },
 		{ "POISSON"          , recon_t::POISSON           }
 	};
-	return method_map[method];
+	return map[method];
 }
 
 /**
@@ -268,7 +268,19 @@ void SurfaceRecon::reconstruct() {
 		(this->*recon_map[method])();
 	};
 
+	/**
+	 * Helper function: deduz o nome do arquivo a ser salvo baseado no nome do 
+	 * arquivo da nuvem e o método usado para reconstrução.
+	*/
+	const auto filename = [this] {
+		static std::map<recon_t, std::string> map{
+			{ recon_t::GREEDY_PROJECTION, "GREEDY_PROJECTION" },
+			{ recon_t::POISSON          , "POISSON"           }
+		};
+		return (_cloud_path.stem() += "_" + map[_method] + "_mesh" += _cloud_path.extension());
+	};
+
 	estimate_normals();
 	evaluate_and_call(_method);
-	export_mesh(_cloud_path.stem() += "_mesh.ply");
+	export_mesh(filename());
 }
