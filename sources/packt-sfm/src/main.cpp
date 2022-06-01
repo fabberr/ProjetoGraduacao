@@ -600,10 +600,14 @@ private:
 
 /*
 Example usage:
-{ export f2d="AKAZE" dataset_name="gargoyle" dataset_path="datasets/$dataset_name" output_dir="output/packt/$dataset_name" MVS_root="/usr/local/bin/OpenMVS";echo f2d=$f2d;echo dataset_path=$dataset_path;echo output_dir=$output_dir;echo MVS_root=$MVS_root;mkdir -p $output_dir; }
-{ time ./packt-sfm --f2d=$f2d --cloud="$output_dir/${f2d}_point_cloud.obj" --mvs="$output_dir/${f2d}_reconstruction.mvs" $dataset_path > "$output_dir/${f2d}_output.txt" 2>&1; } 2> "$output_dir/${f2d}_time.txt"
-./filter-cloud "$output_dir/${f2d}_point_cloud.obj" 1
-$MVS_root/DensifyPointCloud -i "$output_dir/${f2d}_reconstruction.mvs" -o "$output_dir/${f2d}_dense_cloud"
+{ export f2d="AKAZE";export dataset_name="crazyhorse";export dataset_path="datasets/$dataset_name";export output_dir="output/packt/$dataset_name/$f2d";export MVS_root="/usr/local/bin/OpenMVS";echo f2d=$f2d;echo dataset_path=$dataset_path;echo output_dir=$output_dir;echo MVS_root=$MVS_root;mkdir -p $output_dir; }
+{ time ./packt-sfm --f2d=$f2d --cloud="$output_dir/sparse.obj" --mvs="$output_dir/sparse.mvs" $dataset_path > "$output_dir/sparse_output.txt" 2>&1; } 2> "$output_dir/sparse_time.txt"
+$MVS_root/DensifyPointCloud -i "$output_dir/sparse.mvs" -o "$output_dir/dense"
+$MVS_root/ReconstructMesh -i "$output_dir/dense.mvs" -o "$output_dir/mesh"
+$MVS_root/RefineMesh -i "$output_dir/mesh.mvs" -o "$output_dir/mesh_refined"
+$MVS_root/TextureMesh --export-type ply -i "$output_dir/mesh.mvs" -o "$output_dir/mesh_textured"
+$MVS_root/TextureMesh --export-type ply -i "$output_dir/mesh_refined.mvs" -o "$output_dir/mesh_refined_textured"
+rm *.log *.dmap
 */
 int main(int argc, char** argv) {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_DEBUG);
