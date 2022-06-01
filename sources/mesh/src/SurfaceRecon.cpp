@@ -277,7 +277,7 @@ void SurfaceRecon::reconstruct() {
 			{ recon_t::GREEDY_PROJECTION, "GREEDY_PROJECTION" },
 			{ recon_t::POISSON          , "POISSON"           }
 		};
-		return (_cloud_path.stem() += "_" + map[_method] + "_mesh" += _cloud_path.extension());
+		return ("mesh_" + map[_method] += _cloud_path.extension());
 	};
 
 	estimate_normals();
