@@ -607,6 +607,8 @@ $MVS_root/ReconstructMesh -i "$output_dir/dense.mvs" -o "$output_dir/mesh"
 $MVS_root/RefineMesh -i "$output_dir/mesh.mvs" -o "$output_dir/mesh_refined"
 $MVS_root/TextureMesh --export-type ply -i "$output_dir/mesh.mvs" -o "$output_dir/mesh_textured"
 $MVS_root/TextureMesh --export-type ply -i "$output_dir/mesh_refined.mvs" -o "$output_dir/mesh_refined_textured"
+./mesh "$output_dir/dense.ply"
+./mesh "$output_dir/dense.ply" --method=POISSON
 rm *.log *.dmap
 */
 int main(int argc, char** argv) {
