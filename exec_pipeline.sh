@@ -53,19 +53,19 @@ done
 shift $((OPTIND-1))
 
 # Ensure optional args have a default value if not present
-if ! [ "$f2d" ]; then
+if ! [ -v "$f2d" ]; then
 	export f2d="AKAZE"
 fi
 
-if ! [ "$dataset_base" ]; then
+if ! [ -v "$dataset_base" ]; then
 	export dataset_base="./datasets"
 fi
 
-if ! [ "$output_base" ]; then
+if ! [ -v "$output_base" ]; then
 	export output_base="./output/pipeline"
 fi
 
-if ! [ "$OpenMVS_root" ]; then
+if ! [ -v "$OpenMVS_root" ]; then
 	export OpenMVS_root="/usr/local/bin/OpenMVS"
 fi
 
