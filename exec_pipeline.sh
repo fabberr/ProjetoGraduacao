@@ -106,7 +106,6 @@ mkdir -p $output_dir;
 bins=( packt-sfm mesh )
 for bin in "${bins[@]}"
 do
-	# do whatever on "$i" here
 	if ! [ -x "./$bin" ]; then
 		ln -s "build/$bin/$bin" "$bin"
 	fi
@@ -125,7 +124,7 @@ $OpenMVS_root/DensifyPointCloud -i "$output_dir/sparse.mvs" -o "$output_dir/dens
 # OpenMVS mesh reconstruction and texturing
 $OpenMVS_root/ReconstructMesh -i "$output_dir/dense.mvs" -o "$output_dir/mesh"
 $OpenMVS_root/TextureMesh --export-type ply -i "$output_dir/mesh.mvs" -o "$output_dir/mesh_textured"
-rm *.dmap
+rm ./*.dmap
 
 # PCL Greedy Projection Triangulation and Poisson mesh reconstruction
 ./mesh "$output_dir/dense.ply"
