@@ -69,9 +69,9 @@ if ! [ "$OpenMVS_root" ]; then
 	export OpenMVS_root="/usr/local/bin/OpenMVS"
 fi
 
-# Parsing positional args
+# Parsing non-optional args
 if ! [ "$1" ]; then
-	echo "Positional argument <dataset_name> not found, terminating."
+	echo "Non-optional argument <dataset_name> not present, terminating."
 	echo
 	exec_pipeline_sh_help
 	exit 1
@@ -116,16 +116,21 @@ done
 #
 
 # Sparse cloud generation and camera poses estimation
+printf '\n[PIPELINE] Computing sparse point cloud and estimating cameras poses\n\n'
 { time ./packt-sfm --f2d=$f2d --cloud="$output_dir/sparse.obj" --mvs="$output_dir/sparse.mvs" $dataset_path > "$output_dir/sparse_output.txt" 2>&1; } 2> "$output_dir/sparse_time.txt"
 
 # Dense cloud generation
+printf '\n[PIPELINE] Computing dense point cloud\n\n'
 $OpenMVS_root/DensifyPointCloud -i "$output_dir/sparse.mvs" -o "$output_dir/dense"
 
 # OpenMVS mesh reconstruction and texturing
+printf '\n[PIPELINE] Reconstructing mesh (OpenMVS)\n\n'
 $OpenMVS_root/ReconstructMesh -i "$output_dir/dense.mvs" -o "$output_dir/mesh"
 $OpenMVS_root/TextureMesh --export-type ply -i "$output_dir/mesh.mvs" -o "$output_dir/mesh_textured"
 rm ./*.dmap
 
 # PCL Greedy Projection Triangulation and Poisson mesh reconstruction
+printf '\n[PIPELINE] Reconstructing mes (pcl::GreedyProjectionTriangulation)\n\n'
 ./mesh "$output_dir/dense.ply"
+printf '\n[PIPELINE] Reconstructing mesh (pcl::Poisson)\n\n'
 ./mesh "$output_dir/dense.ply" --method=POISSON
