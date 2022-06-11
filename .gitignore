@@ -1,9 +1,31 @@
-# directories
+# vscode config files
 .vscode
+
+# CMake's binary output directory
 build
+
+# pcloud's default output directory
 output
 
-# dependency dirs
-/sources/Projeto/dependencies/**
-!/sources/Projeto/dependencies/**/
-!/sources/Projeto/dependencies/**/.gitkeep
+# gargoyle dataset subfolders
+datasets/gargoyle/*/
+
+# OpenMVS's DensifyPointCloud output files
+*.log
+*.dmap
+
+#
+# Executables
+# Excludes symlinks of built binaries on my machine but keeps directories of the 
+# same name. If you have cloned this repository from a remote git host, these 
+# rules will likely not be of any use to you unless you do something like 
+# `ln -s build/pcloud/pcloud ./pcloud` in the root directory of this repo.
+#
+pcloud
+filter-cloud
+packt-sfm
+mesh
+!/sources/pcloud/
+!/sources/filter-cloud/
+!/sources/packt-sfm/
+!/sources/mesh/
