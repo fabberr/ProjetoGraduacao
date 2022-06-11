@@ -116,7 +116,7 @@ done
 #
 
 # Sparse cloud generation and camera poses estimation
-printf '\n[PIPELINE] Computing sparse point cloud and estimating cameras poses\n\n'
+printf '\n[PIPELINE] Computing sparse point cloud and estimating camera poses\n\n'
 { time ./packt-sfm --f2d=$f2d --cloud="$output_dir/sparse.obj" --mvs="$output_dir/sparse.mvs" $dataset_path > "$output_dir/sparse_output.txt" 2>&1; } 2> "$output_dir/sparse_time.txt"
 
 # Dense cloud generation
@@ -130,7 +130,7 @@ $OpenMVS_root/TextureMesh --export-type ply -i "$output_dir/mesh.mvs" -o "$outpu
 rm ./*.dmap
 
 # PCL Greedy Projection Triangulation and Poisson mesh reconstruction
-printf '\n[PIPELINE] Reconstructing mes (pcl::GreedyProjectionTriangulation)\n\n'
+printf '\n[PIPELINE] Reconstructing mesh (pcl::GreedyProjectionTriangulation)\n\n'
 ./mesh "$output_dir/dense.ply"
 printf '\n[PIPELINE] Reconstructing mesh (pcl::Poisson)\n\n'
 ./mesh "$output_dir/dense.ply" --method=POISSON
