@@ -15,7 +15,7 @@ exec_pipeline_sh_help() {
 	echo "      - \$f2d             Feature detector and descriptor."
 	echo "      - \$dataset_base    Base dataset path."
 	echo "      - \$dataset_name    Name of dataset's root directory."
-	echo "      - \$dataset_path    Path do image dataset. Derided from \"\$dataset_base/\$dataset_name\"."
+	echo "      - \$dataset_path    Path to image dataset. Derided from \"\$dataset_base/\$dataset_name\"."
 	echo "      - \$output_base     Base output path."
 	echo "      - \$output_dir      Path to output directory. Derided from \"\$output_base/\$dataset_name/\$f2d\"."
 	echo "      - \$MVS_root        Installation path of OpenMVS's apps."
