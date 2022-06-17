@@ -317,9 +317,9 @@ private:
                 std::map<std::string,int> iid;
             };
             std::ofstream ofs("match_graph_good_components.dot");
-            write_graphviz(ofs, gGoodComponents, my_node_writer(g, imageIDs));
+            boost::write_graphviz(ofs, gGoodComponents, my_node_writer(g, imageIDs));
             std::ofstream ofsf("match_graph_filtered.dot");
-            write_graphviz(ofsf, gFiltered, my_node_writer(g, imageIDs));
+            boost::write_graphviz(ofsf, gFiltered, my_node_writer(g, imageIDs));
         }
 
         // Each component is a track
@@ -402,9 +402,11 @@ private:
         CV_LOG_INFO(TAG, "Reconstruct from " + std::to_string(tracks[0].cols) + " tracks");
         const cv::Size imgS = images.begin()->second.size();
         const float f = std::max(imgS.width,imgS.height);
-        cv::Mat K = cv::Mat(cv::Matx33f{f, 0.0, imgS.width/2.0f,
-                            0.0, f, imgS.height/2.0f,
-                            0.0, 0.0, 1.0});
+        cv::Mat K = cv::Mat(cv::Matx33f{
+			f  , 0.0, imgS.width/2.0f,
+			0.0, f  , imgS.height/2.0f,
+			0.0, 0.0, 1.0 }
+		);
         cv::sfm::reconstruct(tracks, Rs, Ts, K, points3d, true);
 
         K.copyTo(K_);
@@ -463,7 +465,7 @@ private:
                 cv::Mat out;
                 images[imagesFilenames[j]].copyTo(out);
                 for (int i = 0; i < points2d.rows; i++) {
-                    circle(out, points2d.at<cv::Point2f>(i), 3, CV_RGB(255, 0, 0), cv::FILLED);
+                    cv::circle(out, points2d.at<cv::Point2f>(i), 3, CV_RGB(255, 0, 0), cv::FILLED);
                 }
                 cv::imwrite("reprojection_" + std::to_string(j) + ".jpg", out);
             }
