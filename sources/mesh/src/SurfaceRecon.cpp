@@ -265,7 +265,7 @@ void SurfaceRecon::reconstruct() {
 			{ POISSON          , &SurfaceRecon::reconstruct_poisson           }
 		};
 		_mesh = mesh_t::Ptr(new mesh_t);
-		(this->*recon_map[method])();
+		(this->*recon_map[method])(); // obtem o ponteiro p/ função membro correta, ligando-a à this e chama a função
 	};
 
 	/**
