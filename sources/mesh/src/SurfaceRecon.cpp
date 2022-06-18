@@ -243,6 +243,7 @@ void SurfaceRecon::reconstruct_poisson() {
 	pcl::Poisson<pcl::PointNormal> poisson_recon{};
 	poisson_recon.setInputCloud(_cloud_normals);
 	poisson_recon.setSearchMethod(kdtree);
+	poisson_recon.setDepth(10);
 	poisson_recon.reconstruct(*_mesh);
 }
 
