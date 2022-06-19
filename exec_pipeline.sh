@@ -134,3 +134,6 @@ printf '\n[PIPELINE] Reconstructing mesh (pcl::GreedyProjectionTriangulation)\n\
 ./mesh "$output_dir/dense.ply"
 printf '\n[PIPELINE] Reconstructing mesh (pcl::Poisson)\n\n'
 ./mesh "$output_dir/dense.ply" --method=POISSON
+
+# Move OpenMVS's apps' output to correct directory
+mv ./*.log $output_dir
