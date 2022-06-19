@@ -135,5 +135,8 @@ printf '\n[PIPELINE] Reconstructing mesh (pcl::GreedyProjectionTriangulation)\n\
 printf '\n[PIPELINE] Reconstructing mesh (pcl::Poisson)\n\n'
 ./mesh "$output_dir/dense.ply" --method=POISSON
 
-# Move OpenMVS's apps' output to correct directory
+# Move OpenMVS logs and SfM dubug visualizations to output directory
 mv ./*.log $output_dir
+mv ./*.dot $output_dir
+mv ./*.png $output_dir
+mv ./*.jpg $output_dir
