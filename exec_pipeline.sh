@@ -117,7 +117,7 @@ done
 
 # Sparse cloud generation and camera poses estimation
 printf '\n[PIPELINE] Computing sparse point cloud and estimating camera poses\n\n'
-{ time ./packt-sfm --f2d=$f2d --cloud="$output_dir/sparse.obj" --mvs="$output_dir/sparse.mvs" $dataset_path > "$output_dir/sparse_output.txt" 2>&1; } 2> "$output_dir/sparse_time.txt"
+{ time ./packt-sfm --debug=true --f2d=$f2d --cloud="$output_dir/sparse.obj" --mvs="$output_dir/sparse.mvs" $dataset_path > "$output_dir/sparse_output.txt" 2>&1; } 2> "$output_dir/sparse_time.txt"
 
 # Dense cloud generation
 printf '\n[PIPELINE] Computing dense point cloud\n\n'
