@@ -131,9 +131,10 @@ rm ./*.dmap
 
 # PCL Greedy Projection Triangulation and Poisson mesh reconstruction
 printf '\n[PIPELINE] Reconstructing mesh (pcl::GreedyProjectionTriangulation)\n\n'
-./mesh "$output_dir/dense.ply"
+{ time ./mesh "$output_dir/dense.ply"; } 2> "$output_dir/mesh_greedy_projection_time.txt"
+
 printf '\n[PIPELINE] Reconstructing mesh (pcl::Poisson)\n\n'
-./mesh "$output_dir/dense.ply" --method=POISSON
+{ time ./mesh "$output_dir/dense.ply" --method=POISSON; } 2> "$output_dir/mesh_poisson_time.txt"
 
 # Move OpenMVS logs and SfM dubug visualizations to output directory
 mv ./*.log $output_dir
