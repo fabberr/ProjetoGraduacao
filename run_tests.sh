@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-datasets=( $(ls ./datasets) )
+#datasets=( $(ls ./datasets) )
 detect=( AKAZE SIFT SURF )
-for dataset in "${datasets[@]}"
+for dataset in "$@"
 do
 	for f2d in "${detect[@]}"
 	do
