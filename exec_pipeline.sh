@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 #
-# Author: Fabrício Milanez https://github.com/FabricioMilanez
-# Setup script for scene reconstruction pipeline of https://github.com/FabricioMilanez/ProjetoGraduacao.git
+# Author: Fabrício Milanez https://github.com/fabberr
+# Setup script for scene reconstruction pipeline of https://github.com/fabberr/ProjetoGraduacao.git
 #
 
 exec_pipeline_sh_help() {
