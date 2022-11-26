@@ -1,7 +1,7 @@
 # Reconstrução 3D de Cenas e Objetos a Partir de Imagens Digitais
 Aplicação CLI desenvolvida em C++ como Projeto de Graduação para o curso de Ciência da Computação da FIPP, Presidente Prudente - SP, 2021 - 2022.
 
-Este projeto busca, a partir de uma coleção de imagens digitais, gerar uma malha poligonal texturizada da cena observada nas fotos utilizando diversas técnicas de *Structure From Motion* (SfM) e *Multi-View Stereo* (MVS) encadeadas em um *pipeline* de execução.
+Este projeto busca, a partir de uma coleção de imagens digitais, gerar uma malha tridimensional texturizada da cena observada nas fotos utilizando diversas técnicas de *Structure From Motion* (SfM) e *Multi-View Stereo* (MVS) encadeadas em um *pipeline* de execução.
 
 #### Autores
 > Fabrício Milanez (orientando)<br>
