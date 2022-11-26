@@ -8,6 +8,9 @@ Este projeto busca, a partir de uma coleção de imagens digitais, gerar uma mal
 > Francisco Assis da Silva (orientador)<br>
 > Flávio Pandur Albuquerque Cabral (orientador)
 
+#### Artigo
+> Submetido à Revista Colloquium Exactarum: Em processo de avaliação.
+
 ## Build
 Atualmente, builds nativas são suportadas oficialmente somente em plataformas GNU/Linux devido à falta de suporte de algumas dependências do OpenCV contrib no Windows. Apesar da falta de suporte, esse projeto pode ser compilado no Windows usando o Subsistema do Windows Para Linux ([WSL2](https://learn.microsoft.com/windows/wsl/install)). Builds nativas em plataformas macOS não foram testadas porém devem funcionar.
 
